@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "easteregghunt",
+  "version": "${version}",
+  "name": "EasterEggHunt",
+  "description": "A server-side easter egg hunt mod for Fabric.",
+  "authors": [
+    "kr8gz"
+  ],
+  "contact": {
+    "repo": "https://github.com/kr8gz/EasterEggHunt"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/easteregghunt/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "io.github.kr8gz.easteregghunt.EasterEggHunt"
+      }
+    ]
+  },
+  "mixins": [
+    "easteregghunt.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}",
+    "fabric-language-kotlin": ">=1.10.18+kotlin.1.9.22"
+  }
+}
