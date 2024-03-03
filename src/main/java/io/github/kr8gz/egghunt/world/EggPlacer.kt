@@ -64,16 +64,14 @@ object EggPlacer {
         }
     }
 
-    private fun generateRandomSkullOwner(): NbtCompound {
-        return NbtCompound().apply {
-            putString("Name", EGG_ITEM_NAME)
-            put("Properties", NbtCompound().apply {
-                put("textures", NbtList().apply {
-                    add(NbtCompound().apply {
-                        putString("Value", EGG_TEXTURES.random())
-                    })
+    private fun generateRandomSkullOwner() = NbtCompound().apply {
+        putString("Name", EGG_ITEM_NAME)
+        put("Properties", NbtCompound().apply {
+            put("textures", NbtList().apply {
+                add(NbtCompound().apply {
+                    putString("Value", EGG_TEXTURES.random())
                 })
             })
-        }
+        })
     }
 }

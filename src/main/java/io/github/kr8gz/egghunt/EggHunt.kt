@@ -1,6 +1,6 @@
 package io.github.kr8gz.egghunt
 
-import io.github.kr8gz.egghunt.commands.EggHuntCommand
+import io.github.kr8gz.egghunt.command.EggHuntCommand
 import io.github.kr8gz.egghunt.world.EggClickDetector
 import io.github.kr8gz.egghunt.world.EggRemover
 import net.fabricmc.api.ModInitializer
@@ -12,9 +12,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 object EggHunt : ModInitializer {
-    const val MOD_ID = "egghunt"
-    val MOD_NAME = this::class.simpleName
-
+    val MOD_NAME = this::class.simpleName!!
     val LOGGER: Logger = LogManager.getLogger()
 
     override fun onInitialize() {
