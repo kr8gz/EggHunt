@@ -4,12 +4,12 @@ import io.github.kr8gz.egghunt.Egg
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.eggHuntMessage
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.PlayerHeadItem
 import net.minecraft.nbt.NbtByte
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
@@ -45,18 +45,18 @@ object EggPlacer {
         "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWYzMjlmMWI0NDhlYWFiMmY5ZjA0NDZmYzBiMjMxZWI3NzUxMzczYWZlNDc0MjZlNDk1MGY3ZDA4NjIwZjA4ZCJ9fX0=",
     )
 
-    fun giveEggItem(player: ServerPlayerEntity) {
-        player.giveItemStack(Items.PLAYER_HEAD.defaultStack.apply {
+    fun getEggItem(): ItemStack {
+        return Items.PLAYER_HEAD.defaultStack.apply {
             setCustomName(Text.literal(EGG_ITEM_NAME).styled { style -> style.withItalic(false) })
-            setSubNbt(EggHunt.MOD_NAME, NbtByte.ONE)
+            setSubNbt(EggHunt.MOD_NAME, NbtByte.ONE) // marker tag
             setSubNbt(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-        })
+        }
     }
 
     @JvmStatic
     fun placeEggAndUpdateItem(context: ItemPlacementContext) {
         context.stack.nbt?.run {
-            if (getBoolean(EggHunt.MOD_NAME)) {
+            if (getBoolean(EggHunt.MOD_NAME)) { // check for marker tag
                 put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
                 Egg.create(context.blockPos)
                 context.player?.eggHuntMessage("Egg placed!", Formatting.GREEN)

@@ -13,14 +13,18 @@ object Database {
             .toList()
             .sortedByDescending { it.second }
     }
+
+    fun getTotalEggCount(): Int {
+        return eggLocations.size
+    }
 }
 
 // temporary for testing
-var nextId = 0
+private var nextId = 0
     get() = ++field
 
-val eggLocations = HashMap<Int, BlockPos>()
-val foundEggs = HashSet<Pair<Int, UUID>>()
+private val eggLocations = HashMap<Int, BlockPos>()
+private val foundEggs = HashSet<Pair<Int, UUID>>()
 
 data class Egg(val id: Int) {
     companion object {
@@ -43,6 +47,6 @@ data class Egg(val id: Int) {
 // try to create an entry with the egg id and the player uuid, and return whether the egg has not been found by the player with the uuid already
 fun PlayerEntity.foundEgg(egg: Egg) = foundEggs.add(egg.id to uuid)
 
-fun getEggCount(uuid: UUID): Int {
+fun PlayerEntity.getEggCount(): Int {
     return foundEggs.count { it.second == uuid }
 }
