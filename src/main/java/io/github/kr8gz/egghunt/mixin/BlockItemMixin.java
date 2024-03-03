@@ -1,6 +1,6 @@
 package io.github.kr8gz.egghunt.mixin;
 
-import io.github.kr8gz.egghunt.EggPlacer;
+import io.github.kr8gz.egghunt.world.EggPlacer;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.util.ActionResult;
@@ -14,7 +14,7 @@ public class BlockItemMixin {
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At("RETURN"))
     private void placeFromNbt(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir) {
         if (cir.getReturnValue().isAccepted()) {
-            EggPlacer.INSTANCE.placeEggAndUpdateItem(context);
+            EggPlacer.placeEggAndUpdateItem(context);
         }
     }
 }

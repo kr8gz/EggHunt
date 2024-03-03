@@ -1,7 +1,8 @@
-package io.github.kr8gz.egghunt
+package io.github.kr8gz.egghunt.world
 
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
-import net.minecraft.block.BlockState
+import io.github.kr8gz.egghunt.Egg
+import io.github.kr8gz.egghunt.EggHunt
+import io.github.kr8gz.egghunt.eggHuntMessage
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
 import net.minecraft.item.PlayerHeadItem
@@ -11,7 +12,6 @@ import net.minecraft.nbt.NbtList
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.util.math.BlockPos
 
 object EggPlacer {
     private const val EGG_ITEM_NAME = "Easter Egg"
@@ -53,38 +53,13 @@ object EggPlacer {
         })
     }
 
+    @JvmStatic
     fun placeEggAndUpdateItem(context: ItemPlacementContext) {
         context.stack.nbt?.run {
             if (getBoolean(EggHunt.MOD_NAME)) {
                 put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
                 Egg.create(context.blockPos)
-                context.player?.eggHuntMessage(Text.literal("Egg placed!").formatted(Formatting.GREEN))
-            }
-        }
-    }
-
-    /**
-     * Since all eggs are removed in [checkForEggRemoval] before the listener in
-     * [registerPlayerBlockBreakListener] is fired, we need a variable to track
-     * the last egg that was removed. Using this, we can always remove the egg
-     * first and send a message later when it was actually broken by a player.
-     **/
-    private var lastRemovedEggPos: BlockPos? = null
-
-    fun checkForEggRemoval(pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
-        lastRemovedEggPos = null
-        if (oldBlock.block != newBlock.block) {
-            Egg.findAtLocation(pos)?.run {
-                remove()
-                lastRemovedEggPos = pos
-            }
-        }
-    }
-
-    fun registerPlayerBlockBreakListener() {
-        PlayerBlockBreakEvents.AFTER.register { _, player, pos, _, _ ->
-            if (lastRemovedEggPos == pos) {
-                player.eggHuntMessage(Text.literal("Egg removed!").formatted(Formatting.RED))
+                context.player?.eggHuntMessage("Egg placed!", Formatting.GREEN)
             }
         }
     }
