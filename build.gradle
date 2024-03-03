@@ -2,7 +2,6 @@ plugins {
     id 'fabric-loom' version '1.5-SNAPSHOT'
     id 'maven-publish'
     id 'org.jetbrains.kotlin.jvm' version '2.0.0-Beta4'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 version = project.mod_version
@@ -17,6 +16,11 @@ repositories {
     // for more information about repositories.
 }
 
+void implementationAndInclude(String dependency) {
+    dependencies.implementation dependency
+    dependencies.include dependency
+}
+
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -27,8 +31,9 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:1.10.18+kotlin.1.9.22"
 
-    shadow 'com.uchuhimo:konf-core:1.1.2'
-    shadow 'com.uchuhimo:konf-toml:1.1.2'
+    implementationAndInclude 'com.sksamuel.hoplite:hoplite-core:2.7.5'
+    implementationAndInclude 'com.sksamuel.hoplite:hoplite-toml:2.7.5'
+    implementationAndInclude 'com.sksamuel.hoplite:hoplite-watch:2.7.5'
 }
 
 processResources {
@@ -72,21 +77,6 @@ jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}
     }
-}
-
-remapJar {
-    dependsOn(shadowJar)
-    input.set(shadowJar.archiveFile)
-}
-
-shadowJar {
-    from("LICENSE")
-
-    configurations = List.of(project.configurations.shadow)
-    archiveClassifier.set("dev-all")
-
-    def path = "io.github.kr8gz.libs"
-    relocate("com.uchuhimo.konf", path + "com.uchuhimo.konf")
 }
 
 // configure the maven publication

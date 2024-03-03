@@ -2,6 +2,7 @@ package io.github.kr8gz.egghunt.world
 
 import io.github.kr8gz.egghunt.Database.foundEgg
 import io.github.kr8gz.egghunt.Egg
+import io.github.kr8gz.egghunt.config.config
 import io.github.kr8gz.egghunt.eggHuntMessage
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
@@ -34,12 +35,21 @@ object EggFindDetector {
     }
 
     private fun eggFindListener(player: PlayerEntity, world: World, pos: BlockPos) {
-        Egg.findAtLocation(pos)?.let {
-            if (player.foundEgg(it)) {
-                player.eggHuntMessage("You found an egg!", Formatting.GREEN)
-                spawnFirework(world, pos)
-            } else {
-                player.eggHuntMessage("You already found this egg!", Formatting.RED)
+        val egg = Egg.findAtLocation(pos) ?: return
+
+        if (!player.foundEgg(egg)) {
+            player.eggHuntMessage("You already found this egg!", Formatting.RED)
+            return
+        }
+
+        player.eggHuntMessage("You found an egg!", Formatting.GREEN)
+
+        with(config.onEggFound) {
+            if (spawnFireworks) spawnFirework(world, pos)
+            world.server?.run {
+                commands.forEach {
+                    commandManager.executeWithPrefix(commandSource, "execute as ${player.uuid} run $it")
+                }
             }
         }
     }

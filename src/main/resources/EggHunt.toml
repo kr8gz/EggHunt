@@ -1,0 +1,10 @@
+[onEggFound]
+# Whether to spawn a firework rocket whenever a new egg is found by a player.
+spawnFireworks = true
+
+# A list of commands to run when an egg is found.
+# @s refers to the player who found the egg.
+# Commands must be written without a preceding `/`.
+commands = [
+    "give @s diamond",
+]
