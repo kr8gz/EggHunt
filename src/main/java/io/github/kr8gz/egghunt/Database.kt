@@ -114,15 +114,15 @@ object Database {
             return false
         }
 
+        if (!rs.isBeforeFirst) { //Check if result set returned anything
+            LOGGER.warn("Player tried to find egg that doesn't exist in database at $pos")
+            return false
+        }
         val eggId = rs.getInt("id")
         val foundCount = rs.getInt("found_count")
 
         if (foundCount > 0)
             return false
-
-        if (eggId == 0) {
-            LOGGER.info("Egg 0 at $pos")
-        }
 
         ps = conn.prepareStatement("INSERT INTO found_egg (egg_id, player_uuid) VALUES (?, ?)")
         ps.setInt(1, eggId)
