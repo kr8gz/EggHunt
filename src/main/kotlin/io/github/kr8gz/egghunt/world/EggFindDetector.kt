@@ -1,8 +1,8 @@
 package io.github.kr8gz.egghunt.world
 
+import io.github.kr8gz.egghunt.Database.foundEgg
 import io.github.kr8gz.egghunt.Egg
 import io.github.kr8gz.egghunt.eggHuntMessage
-import io.github.kr8gz.egghunt.foundEgg
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.player.PlayerEntity

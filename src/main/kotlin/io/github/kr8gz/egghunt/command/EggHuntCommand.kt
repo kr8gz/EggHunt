@@ -4,8 +4,8 @@ import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import io.github.kr8gz.egghunt.Database
+import io.github.kr8gz.egghunt.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
-import io.github.kr8gz.egghunt.getEggCount
 import io.github.kr8gz.egghunt.world.EggPlacer
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
@@ -22,18 +22,14 @@ object EggHuntCommand {
     }
 
     private fun displayLeaderboard(context: CommandContext<ServerCommandSource>): Int {
-        with(context.source) {
-            sendFeedback({
-                Text.literal(buildString {
-                    Database.getLeaderboard().forEachIndexed { index, pair ->
-                        val (uuid, count) = pair
-                        server.userCache!!.getByUuid(uuid).ifPresent {
-                            append("${index + 1}. ${it.name} - $count")
-                        }
-                    }
-                })
-            }, false)
-        }
+        context.source.sendFeedback({
+            Text.literal(buildString {
+                Database.getLeaderboard().forEachIndexed { index, pair ->
+                    val (name, count) = pair
+                    append("${index + 1}. $name - $count")
+                }
+            })
+        }, false)
         return Command.SINGLE_SUCCESS
     }
 

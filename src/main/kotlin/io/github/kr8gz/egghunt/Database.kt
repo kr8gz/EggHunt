@@ -6,13 +6,23 @@ import java.util.UUID
 
 // idk how exactly you want to implement it
 object Database {
-    fun getLeaderboard(): List<Pair<UUID, Int>> = foundEggs
+    fun getLeaderboard(): List<Pair<String, Int>> = foundEggs
             .groupingBy { it.second }
             .eachCount()
+            .mapKeys { playerNames[it.key]!! }
             .toList()
             .sortedByDescending { it.second }
 
     fun getTotalEggCount() = eggLocations.size
+
+    fun updatePlayerName(player: PlayerEntity) {
+        playerNames[player.uuid] = player.gameProfile.name
+    }
+
+    // try to create an entry with the egg id and the player uuid, and return whether the egg has not been found by the player with the uuid already
+    fun PlayerEntity.foundEgg(egg: Egg) = foundEggs.add(egg.id to uuid)
+
+    fun PlayerEntity.getEggCount() = foundEggs.count { it.second == uuid }
 }
 
 // temporary for testing
@@ -21,6 +31,7 @@ private var nextId = 0
 
 private val eggLocations = HashMap<Int, BlockPos>()
 private val foundEggs = HashSet<Pair<Int, UUID>>()
+private val playerNames = HashMap<UUID, String>()
 
 data class Egg(val id: Int) {
     companion object {
@@ -39,8 +50,3 @@ data class Egg(val id: Int) {
         foundEggs.removeIf { it.first == id }
     }
 }
-
-// try to create an entry with the egg id and the player uuid, and return whether the egg has not been found by the player with the uuid already
-fun PlayerEntity.foundEgg(egg: Egg) = foundEggs.add(egg.id to uuid)
-
-fun PlayerEntity.getEggCount() = foundEggs.count { it.second == uuid }
