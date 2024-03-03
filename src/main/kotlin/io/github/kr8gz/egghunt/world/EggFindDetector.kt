@@ -1,6 +1,5 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.Database.checkAndFindEgg
 import io.github.kr8gz.egghunt.config.config
 import io.github.kr8gz.egghunt.eggHuntMessage

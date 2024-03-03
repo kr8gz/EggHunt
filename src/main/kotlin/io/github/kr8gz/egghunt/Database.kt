@@ -160,20 +160,20 @@ object Database {
             LOGGER.error("Unable to delete egg at pos: $pos", e)
         }
     }
-    fun getLeaderboard(): List<Pair<UUID, Int>> {
+    fun getLeaderboard(): List<Pair<String, Int>> {
         val conn = getConnection()
-        val ps = conn.prepareStatement("SELECT player_uuid, COUNT(*) found_count FROM found_egg GROUP BY player_uuid")
+        val ps = conn.prepareStatement("SELECT name, COUNT(*) found_count FROM found_egg fe JOIN player p ON p.uuid = fe.player_uuid GROUP BY fe.player_uuid")
         val rs: ResultSet?
         try {
             rs = ps.executeQuery()
         } catch (e: SQLException) {
             LOGGER.error("Unable to run leaderboard query", e)
-            return ArrayList<Pair<UUID, Int>>()
+            return ArrayList<Pair<String, Int>>()
         }
 
         return rs.use {
             generateSequence {
-                if (rs.next()) Pair<UUID, Int>(UUID.fromString(rs.getString("player_uuid")), rs.getInt("found_count")) else null
+                if (rs.next()) Pair<String, Int>(rs.getString("name"), rs.getInt("found_count")) else null
             }.toList()
         }
     }
@@ -211,8 +211,8 @@ object Database {
         val conn = getConnection()
         val ps = conn.prepareStatement("INSERT INTO player (uuid, name) VALUES(?, ?) ON CONFLICT(uuid) DO UPDATE SET name=?")
         ps.setString(1, playerEntity.uuid.toString())
-        ps.setString(2, playerEntity.name.toString())
-        ps.setString(3, playerEntity.name.toString())
+        ps.setString(2, playerEntity.name.literalString)
+        ps.setString(3, playerEntity.name.literalString)
 
         ps.executeUpdate()
     }
