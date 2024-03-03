@@ -7,6 +7,7 @@ import io.github.kr8gz.egghunt.world.EggRemover
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -31,6 +32,7 @@ object EggHunt : ModInitializer {
         EggRemover.registerPlayerBlockBreakListener()
         EggFindDetector.registerBlockClickListeners()
 
+        Database.initialize(FabricLoader.getInstance().gameDir)
         initializeConfig()
     }
 }

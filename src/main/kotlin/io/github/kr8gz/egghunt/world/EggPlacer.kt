@@ -1,6 +1,6 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.Egg
+import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.eggHuntMessage
 import net.minecraft.item.ItemPlacementContext
@@ -56,7 +56,7 @@ object EggPlacer {
         context.stack.nbt?.run {
             if (getBoolean(EggHunt.MOD_NAME)) { // check for marker tag
                 put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-                Egg.create(context.blockPos)
+                Database.insertEgg(context.blockPos, context.player?.uuid!!)
                 context.player?.eggHuntMessage("Egg placed!", Formatting.GREEN)
             }
         }

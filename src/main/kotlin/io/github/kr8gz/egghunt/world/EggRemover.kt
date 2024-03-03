@@ -1,6 +1,6 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.Egg
+import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.eggHuntMessage
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.block.BlockState
@@ -20,10 +20,7 @@ object EggRemover {
     fun checkForEggRemoval(pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
         lastRemovedEggPos = null
         if (oldBlock.block != newBlock.block) {
-            Egg.findAtLocation(pos)?.run {
-                remove()
-                lastRemovedEggPos = pos
-            }
+            Database.deleteEggAtPos(pos)
         }
     }
 
