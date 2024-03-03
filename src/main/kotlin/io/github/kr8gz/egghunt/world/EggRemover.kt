@@ -18,10 +18,8 @@ object EggRemover {
 
     @JvmStatic
     fun checkForEggRemoval(pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
-        lastRemovedEggPos = null
-        if (oldBlock.block != newBlock.block) {
-            Database.deleteEggAtPos(pos)
-        }
+        val blockChanged = oldBlock.block != newBlock.block
+        lastRemovedEggPos = if (blockChanged && Database.deleteEggAtPos(pos)) pos else null
     }
 
     fun registerPlayerBlockBreakListener() {

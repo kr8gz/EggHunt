@@ -19,6 +19,7 @@ private val TEMPLATE_CONFIG_PATH = FabricLoader.getInstance()
     .findPath(CONFIG_FILE_NAME).get()
 
 private fun recreateRuntimeConfig() {
+    EggHunt.LOGGER.info("Recreating config file from template")
     Files.copy(TEMPLATE_CONFIG_PATH, RUNTIME_CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING)
 }
 

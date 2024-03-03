@@ -53,11 +53,12 @@ object EggPlacer {
 
     @JvmStatic
     fun placeEggAndUpdateItem(context: ItemPlacementContext) {
-        context.stack.nbt?.run {
-            if (getBoolean(EggHunt.MOD_NAME)) { // check for marker tag
-                put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-                Database.insertEgg(context.blockPos, context.player?.uuid!!)
-                context.player?.eggHuntMessage("Egg placed!", Formatting.GREEN)
+        val nbt = context.stack.nbt ?: return
+        if (nbt.getBoolean(EggHunt.MOD_NAME)) { // check for marker tag
+            val player = context.player ?: return
+            nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
+            Database.createEggAtPos(context.blockPos, player.uuid)?.also { id ->
+                player.eggHuntMessage("Egg #$id placed!", Formatting.GREEN)
             }
         }
     }

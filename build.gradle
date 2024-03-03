@@ -9,14 +9,10 @@ group = project.maven_group
 
 repositories {
     mavenCentral()
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "Modrinth"
-                url = "https://api.modrinth.com/maven"
-            }
-        }
-        filter {
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
             includeGroup "maven.modrinth"
         }
     }
@@ -43,10 +39,8 @@ dependencies {
     include implementation('org.tomlj:tomlj:1.1.0')
     include implementation('org.antlr:antlr4-runtime:4.11.1')
     include implementation('org.checkerframework:checker-qual:3.21.2')
-    implementationAndInclude 'com.sksamuel.hoplite:hoplite-core:2.7.5'
-    implementationAndInclude 'com.sksamuel.hoplite:hoplite-toml:2.7.5'
-    implementationAndInclude 'com.sksamuel.hoplite:hoplite-watch:2.7.5'
-    modImplementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
+
+    include implementation('maven.modrinth:sqlite-jdbc:3.41.2.1+20230506')
 }
 
 processResources {
@@ -70,7 +64,7 @@ tasks.withType(JavaCompile).configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        it.options.release = targetJavaVersion
+        it.options.release.set(targetJavaVersion)
     }
 }
 

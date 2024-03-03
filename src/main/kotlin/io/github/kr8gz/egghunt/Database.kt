@@ -1,18 +1,16 @@
 package io.github.kr8gz.egghunt
 
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.math.BlockPos
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import org.sqlite.SQLiteException
 import java.io.IOException
-import java.nio.file.Path
-import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
-
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
 
 const val schemaEggTable: String = """
 CREATE TABLE IF NOT EXISTS egg (
@@ -22,201 +20,221 @@ CREATE TABLE IF NOT EXISTS egg (
     z INT NOT NULL,
     placed_by_uuid TEXT(36) NOT NULL,
     created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+)
 """
+
 const val schemaFoundEggsTable: String = """
 CREATE TABLE IF NOT EXISTS found_egg (
     egg_id INT NOT NULL,
     player_uuid TEXT(36) NOT NULL,
     found_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (egg_id, player_uuid),
-    FOREIGN KEY (egg_id) REFERENCES egg(id) ON DELETE CASCADE
+    FOREIGN KEY (egg_id) REFERENCES egg(id) ON DELETE CASCADE,
     FOREIGN KEY (player_uuid) REFERENCES player(uuid) ON DELETE CASCADE
-);
+)
 """
+
 const val schemaPlayerTable: String = """
 CREATE TABLE IF NOT EXISTS player (
     uuid TEXT(36) PRIMARY KEY,
     name TEXT(100) NOT NULL
-);
+)
 """
+
 object Database {
-    private val LOGGER: Logger = LogManager.getLogger()
-    private var connection: Connection? = null
-    private var dbPath: Path? = null
+    private val DATABASE_PATH = FabricLoader.getInstance().gameDir.resolve("${EggHunt.MOD_NAME}.db")
 
-    fun initialize(gameDir: Path) {
-        dbPath = gameDir.resolve("EggHunt.db")
+    private val connection = getNewConnection()
+        get() = if (!field.isClosed) field else getNewConnection()
 
-        val dbFile = dbPath!!.toFile()
+    private fun getNewConnection() = DriverManager.getConnection("jdbc:sqlite:$DATABASE_PATH")
 
-        if (!dbFile.exists()) {
+    fun initialize() {
+        if (!DATABASE_PATH.exists()) {
             try {
-                LOGGER.info("Creating EggHunt database file " + dbPath!!.toAbsolutePath())
-                dbFile.createNewFile()
+                EggHunt.LOGGER.info("Creating database file at ${DATABASE_PATH.toAbsolutePath()}")
+                DATABASE_PATH.createFile()
             } catch (e: IOException) {
-                LOGGER.error("Unable to create database file", e)
+                EggHunt.LOGGER.error("Unable to create database file", e)
+            }
+        }
+        setupTables()
+    }
+
+    private fun setupTables() {
+        try {
+            connection.createStatement().run {
+                executeUpdate(schemaEggTable)
+                executeUpdate(schemaPlayerTable)
+                executeUpdate(schemaFoundEggsTable)
+
+                // enables foreign keys including references and cascading deletion
+                execute("PRAGMA foreign_keys = ON")
+
+                close()
+            }
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to create database schema", e)
+        }
+    }
+
+    /**
+     * @return the ID of the new egg, or `null` if it could not be created
+     **/
+    fun createEggAtPos(pos: BlockPos, placedByUUID: UUID): Int? {
+        return try {
+            connection.prepareStatement("INSERT INTO egg (x, y, z, placed_by_uuid) VALUES (?, ?, ?, ?)")
+                .run {
+                    setInt(1, pos.x)
+                    setInt(2, pos.y)
+                    setInt(3, pos.z)
+                    setString(4, placedByUUID.toString())
+                    executeUpdate()
+                }
+
+            connection.prepareStatement("SELECT last_insert_rowid() AS last_id")
+                .executeQuery()
+                .getInt("last_id")
+        }
+        catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to insert egg into database", e)
+            null
+        }
+    }
+
+    /**
+     * @return whether there is an egg at the position,
+     * or `false` if the query could not be executed
+     **/
+    fun isEggAtPos(pos: BlockPos): Boolean = with(pos) {
+        try {
+            connection.prepareStatement("SELECT 1 FROM egg WHERE x = ? AND y = ? AND z = ?")
+                .run {
+                    setInt(1, x)
+                    setInt(2, y)
+                    setInt(3, z)
+                    executeQuery()
+                }
+                .use(ResultSet::next)
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to determine if there is an egg at position $x $y $z", e)
+            false
+        }
+    }
+
+    /**
+     * @return whether an egg was deleted at the position
+     **/
+    fun deleteEggAtPos(pos: BlockPos): Boolean = with(pos) {
+        try {
+            connection.prepareStatement("DELETE FROM egg WHERE x = ? AND y = ? AND z = ?")
+                .run {
+                    setInt(1, x)
+                    setInt(2, y)
+                    setInt(3, z)
+                    executeUpdate() > 0
+                }
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to delete egg at position $x $y $z", e)
+            false
+        }
+    }
+
+    fun getLeaderboard(): List<Pair<String, Int>>? {
+        return try {
+            // TODO shouldnt this be sorted?
+            connection.prepareStatement("SELECT name, COUNT(*) found_count FROM found_egg fe JOIN player p ON p.uuid = fe.player_uuid GROUP BY fe.player_uuid")
+                .executeQuery()
+                .use { rs ->
+                    generateSequence {
+                        if (rs.next()) rs.getString("name") to rs.getInt("found_count") else null
+                    }.toList()
+                }
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to execute leaderboard query", e)
+            null
+        }
+    }
+
+    /**
+     * @return the total number of eggs in the database, or `null` if a database operation failed
+     **/
+    fun getTotalEggCount(): Int? {
+        return try {
+            connection.prepareStatement("SELECT COUNT(*) AS total_eggs FROM egg")
+                .executeQuery()
+                .getInt("total_eggs")
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to get total egg count", e)
+            null
+        }
+    }
+
+    fun updatePlayerName(player: PlayerEntity): Unit = with(player) {
+        val name = name.literalString
+        try {
+            connection.prepareStatement("INSERT INTO player (uuid, name) VALUES(?, ?) ON CONFLICT(uuid) DO UPDATE SET name=?")
+                .run {
+                    setString(1, uuid.toString())
+                    setString(2, name)
+                    setString(3, name)
+                    executeUpdate()
+                }
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to update player name of $name ($uuid)", e)
+        }
+    }
+
+    /**
+     * @return the total number of eggs the player has found, or `null` if a database operation failed
+     **/
+    fun PlayerEntity.getEggCount(): Int? {
+        return try {
+            connection.prepareStatement("SELECT COUNT(*) AS found_count FROM found_egg WHERE player_uuid = ?")
+                .apply { setString(1, uuid.toString()) }
+                .executeQuery()
+                .getInt("found_count")
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to get egg count for player $uuid", e)
+            null
+        }
+    }
+
+    /**
+     * @return `false` if the egg has already been found by the player,
+     * `null` if a database operation failed, or `true` otherwise
+     **/
+    fun PlayerEntity.checkFoundEgg(pos: BlockPos): Boolean? {
+        val eggId = with(pos) {
+            try {
+                connection.prepareStatement("SELECT id FROM egg WHERE x = ? AND y = ? AND z = ?")
+                    .run {
+                        setInt(1, x)
+                        setInt(2, y)
+                        setInt(3, z)
+                        executeQuery()
+                    }
+                    .use { rs -> if (rs.next()) rs.getInt("id") else return false }
+            } catch (e: SQLException) {
+                EggHunt.LOGGER.error("Unable to get egg ID at position $x $y $z", e)
+                return null
             }
         }
 
-        val conn = getConnection()
-        setupTables(conn)
-    }
-    private fun getConnection(): Connection {
-        if (connection?.isClosed == false)
-            return connection!!
-
-        try {
-            connection = DriverManager.getConnection("jdbc:sqlite:$dbPath")
-        } catch(e: SQLException) {
-            LOGGER.error("SQLite failed to initialize", e)
-        } catch (e: ClassNotFoundException) {
-            LOGGER.error("Unable to find SQLite library.", e)
-        }
-
-        return connection!!
-    }
-
-    private fun setupTables(conn: Connection) {
-        try {
-            val statement = conn.createStatement()
-            statement.executeUpdate(schemaEggTable)
-            statement.executeUpdate(schemaPlayerTable)
-            statement.executeUpdate(schemaFoundEggsTable)
-            statement.close()
+        return try {
+            connection.prepareStatement("INSERT INTO found_egg (egg_id, player_uuid) VALUES (?, ?)")
+                .run {
+                    setInt(1, eggId)
+                    setString(2, uuid.toString())
+                    executeUpdate()
+                }
+            true
+        } catch (e: SQLiteException) {
+            // primary key constraint violated, entry already exists
+            false
         } catch (e: SQLException) {
-            LOGGER.error("Unable to create schema for EggHunt", e)
+            EggHunt.LOGGER.error("Unable to register $uuid finding egg $eggId", e)
+            null
         }
     }
-
-    fun insertEgg(pos: BlockPos, playerUUID: UUID): Int? {
-        try {
-            val conn = getConnection()
-            val ps = conn.prepareStatement("INSERT INTO egg (x, y, z, placed_by_uuid) VALUES (?, ?, ?, ?)")
-            ps.setInt(1, pos.x)
-            ps.setInt(2, pos.y)
-            ps.setInt(3, pos.z)
-            ps.setString(4, playerUUID.toString())
-
-            ps.executeUpdate()
-
-            val rs = conn.prepareStatement("SELECT last_insert_rowid() AS last_id;").executeQuery()
-            return rs.getInt("last_id")
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to insert egg into database", e)
-        }
-        return null
-    }
-
-    fun playerCheckAndFindEgg(pos: BlockPos, playerUUID: UUID): Boolean {
-        // Check for eggs
-        val conn = getConnection()
-        var ps = conn.prepareStatement("SELECT id, ( SELECT COUNT(*) FROM found_egg WHERE egg_id = id AND player_uuid = ? LIMIT 1) AS found_count FROM egg WHERE x = ? AND y = ? AND z = ?;")
-        ps.setString(1, playerUUID.toString())
-        ps.setInt(2, pos.x)
-        ps.setInt(3, pos.y)
-        ps.setInt(4, pos.z)
-        val rs: ResultSet?
-        try {
-            rs = ps.executeQuery()
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to query for found eggs", e)
-            return false
-        }
-
-        if (!rs.isBeforeFirst) { //Check if result set returned anything
-            LOGGER.warn("Player tried to find egg that doesn't exist in database at $pos")
-            return false
-        }
-        val eggId = rs.getInt("id")
-        val foundCount = rs.getInt("found_count")
-
-        if (foundCount > 0)
-            return false
-
-        ps = conn.prepareStatement("INSERT INTO found_egg (egg_id, player_uuid) VALUES (?, ?)")
-        ps.setInt(1, eggId)
-        ps.setString(2, playerUUID.toString())
-        try {
-            ps.executeUpdate()
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to insert found_egg for $eggId $playerUUID", e)
-            return false
-        }
-
-        return true
-    }
-
-    fun deleteEggAtPos(pos: BlockPos) {
-        val conn = getConnection()
-        val ps = conn.prepareStatement("DELETE FROM egg WHERE x = ? AND y = ? AND z = ?")
-        ps.setInt(1, pos.x)
-        ps.setInt(2, pos.y)
-        ps.setInt(3, pos.z)
-
-        try {
-            ps.executeUpdate()
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to delete egg at pos: $pos", e)
-        }
-    }
-    fun getLeaderboard(): List<Pair<String, Int>> {
-        val conn = getConnection()
-        val ps = conn.prepareStatement("SELECT name, COUNT(*) found_count FROM found_egg fe JOIN player p ON p.uuid = fe.player_uuid GROUP BY fe.player_uuid")
-        val rs: ResultSet?
-        try {
-            rs = ps.executeQuery()
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to run leaderboard query", e)
-            return ArrayList<Pair<String, Int>>()
-        }
-
-        return rs.use {
-            generateSequence {
-                if (rs.next()) Pair<String, Int>(rs.getString("name"), rs.getInt("found_count")) else null
-            }.toList()
-        }
-    }
-
-    fun getPlayerEggCount(playerUUID: UUID): Int {
-        val conn = getConnection()
-        val ps = conn.prepareStatement("SELECT COUNT(*) AS found_count FROM found_egg WHERE player_uuid = ?")
-        ps.setString(1, playerUUID.toString())
-        val rs: ResultSet?
-        try {
-            rs = ps.executeQuery()
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to run query to get player's egg count", e)
-            return 0
-        }
-
-        return rs.getInt("found_count")
-    }
-
-    fun getTotalEggCount(): Int {
-        val conn = getConnection()
-        val ps = conn.prepareStatement("SELECT COUNT(*) AS total_eggs FROM egg")
-        val rs: ResultSet?
-        try {
-            rs = ps.executeQuery()
-        } catch (e: SQLException) {
-            LOGGER.error("Unable to run total egg count query", e)
-            return 0
-        }
-
-        return rs.getInt("total_eggs")
-    }
-
-    fun updatePlayerName(playerEntity: ServerPlayerEntity) {
-        val conn = getConnection()
-        val ps = conn.prepareStatement("INSERT INTO player (uuid, name) VALUES(?, ?) ON CONFLICT(uuid) DO UPDATE SET name=?")
-        ps.setString(1, playerEntity.uuid.toString())
-        ps.setString(2, playerEntity.name.literalString)
-        ps.setString(3, playerEntity.name.literalString)
-
-        ps.executeUpdate()
-    }
-
-    fun PlayerEntity.getEggCount() = getPlayerEggCount(this.uuid)
-    fun PlayerEntity.checkAndFindEgg(pos: BlockPos) = playerCheckAndFindEgg(pos, this.uuid)
 }

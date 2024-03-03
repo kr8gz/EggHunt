@@ -10,6 +10,7 @@ import io.github.kr8gz.egghunt.world.EggPlacer
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
+import java.text.DecimalFormat
 
 @Suppress("UsePropertyAccessSyntax") // playerOrThrow isn't like a property lol
 object EggHuntCommand {
@@ -24,7 +25,7 @@ object EggHuntCommand {
     private fun displayLeaderboard(context: CommandContext<ServerCommandSource>): Int {
         context.source.sendFeedback({
             Text.literal(buildString {
-                Database.getLeaderboard().forEachIndexed { index, pair ->
+                Database.getLeaderboard()!!.forEachIndexed { index, pair ->
                     val (name, count) = pair
                     append("${index + 1}. $name - $count")
                 }
@@ -56,7 +57,11 @@ object EggHuntCommand {
     private fun displayPlayerProgress(context: CommandContext<ServerCommandSource>): Int {
         with(context.source) {
             sendFeedback({
-                Text.literal("${getPlayerOrThrow().getEggCount()} / ${Database.getTotalEggCount()}")
+                val playerFound = getPlayerOrThrow().getEggCount()!!
+                val totalEggs = Database.getTotalEggCount()!!
+                // FIXME division by zero
+                val percentage = DecimalFormat("#.##").format(playerFound / totalEggs.toFloat() * 100)
+                Text.literal("$playerFound / $totalEggs ($percentage%)")
             }, false)
         }
         return Command.SINGLE_SUCCESS

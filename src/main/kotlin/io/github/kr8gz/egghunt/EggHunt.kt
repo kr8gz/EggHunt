@@ -32,7 +32,7 @@ object EggHunt : ModInitializer {
         EggRemover.registerPlayerBlockBreakListener()
         EggFindDetector.registerBlockClickListeners()
 
-        Database.initialize(FabricLoader.getInstance().gameDir)
+        Database.initialize()
         initializeConfig()
     }
 }
