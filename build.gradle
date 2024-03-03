@@ -16,11 +16,6 @@ repositories {
     // for more information about repositories.
 }
 
-void implementationAndInclude(String dependency) {
-    dependencies.implementation dependency
-    dependencies.include dependency
-}
-
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -31,9 +26,12 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:1.10.18+kotlin.1.9.22"
 
-    implementationAndInclude 'com.sksamuel.hoplite:hoplite-core:2.7.5'
-    implementationAndInclude 'com.sksamuel.hoplite:hoplite-toml:2.7.5'
-    implementationAndInclude 'com.sksamuel.hoplite:hoplite-watch:2.7.5'
+    include implementation('com.sksamuel.hoplite:hoplite-core:2.7.5')
+    include implementation('com.sksamuel.hoplite:hoplite-watch:2.7.5')
+    include implementation('com.sksamuel.hoplite:hoplite-toml:2.7.5')
+    include implementation('org.tomlj:tomlj:1.1.0')
+    include implementation('org.antlr:antlr4-runtime:4.11.1')
+    include implementation('org.checkerframework:checker-qual:3.21.2')
 }
 
 processResources {
@@ -71,12 +69,6 @@ java {
     // if it is present.
     // If you remove this line, sources will not be generated.
     withSourcesJar()
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
-    }
 }
 
 // configure the maven publication
