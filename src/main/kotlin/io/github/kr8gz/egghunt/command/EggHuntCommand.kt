@@ -42,7 +42,14 @@ object EggHuntCommand {
             val player = getPlayerOrThrow()
             val item = EggPlacer.getEggItem()
 
-            player.giveItemStack(item.copy()) // copy so it can be displayed in the command feedback
+            item.copy().let { // copy so it can be displayed in the command feedback
+                if (!player.giveItemStack(it)) { // if the item could not be inserted
+                    player.dropItem(it, false)?.apply {
+                        resetPickupDelay()
+                        setOwner(player.getUuid())
+                    }
+                }
+            }
             sendFeedback({
                 Text.translatable("commands.give.success.single", 1, item.toHoverableText(), player.displayName)
             }, true)

@@ -1,7 +1,7 @@
 package io.github.kr8gz.egghunt
 
 import io.github.kr8gz.egghunt.command.EggHuntCommand
-import io.github.kr8gz.egghunt.world.EggClickDetector
+import io.github.kr8gz.egghunt.world.EggFindDetector
 import io.github.kr8gz.egghunt.world.EggRemover
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
@@ -21,7 +21,7 @@ object EggHunt : ModInitializer {
         }
 
         EggRemover.registerPlayerBlockBreakListener()
-        EggClickDetector.registerBlockClickListeners()
+        EggFindDetector.registerBlockClickListeners()
     }
 }
 

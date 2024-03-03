@@ -45,12 +45,10 @@ object EggPlacer {
         "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWYzMjlmMWI0NDhlYWFiMmY5ZjA0NDZmYzBiMjMxZWI3NzUxMzczYWZlNDc0MjZlNDk1MGY3ZDA4NjIwZjA4ZCJ9fX0=",
     )
 
-    fun getEggItem(): ItemStack {
-        return Items.PLAYER_HEAD.defaultStack.apply {
-            setCustomName(Text.literal(EGG_ITEM_NAME).styled { style -> style.withItalic(false) })
-            setSubNbt(EggHunt.MOD_NAME, NbtByte.ONE) // marker tag
-            setSubNbt(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-        }
+    fun getEggItem(): ItemStack = Items.PLAYER_HEAD.defaultStack.apply {
+        setCustomName(Text.literal(EGG_ITEM_NAME).styled { style -> style.withItalic(false) })
+        setSubNbt(EggHunt.MOD_NAME, NbtByte.ONE) // marker tag
+        setSubNbt(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
     }
 
     @JvmStatic

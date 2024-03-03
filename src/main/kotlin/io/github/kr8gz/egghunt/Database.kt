@@ -6,17 +6,13 @@ import java.util.UUID
 
 // idk how exactly you want to implement it
 object Database {
-    fun getLeaderboard(): List<Pair<UUID, Int>> {
-        return foundEggs
+    fun getLeaderboard(): List<Pair<UUID, Int>> = foundEggs
             .groupingBy { it.second }
             .eachCount()
             .toList()
             .sortedByDescending { it.second }
-    }
 
-    fun getTotalEggCount(): Int {
-        return eggLocations.size
-    }
+    fun getTotalEggCount() = eggLocations.size
 }
 
 // temporary for testing
@@ -32,9 +28,9 @@ data class Egg(val id: Int) {
             eggLocations[nextId] = pos
         }
 
-        fun findAtLocation(pos: BlockPos): Egg? {
-            return eggLocations.entries.find { it.value == pos }?.let { Egg(it.key) }
-        }
+        fun findAtLocation(pos: BlockPos) = eggLocations.entries
+            .find { it.value == pos }
+            ?.let { Egg(it.key) }
     }
 
     fun remove() {
@@ -47,6 +43,4 @@ data class Egg(val id: Int) {
 // try to create an entry with the egg id and the player uuid, and return whether the egg has not been found by the player with the uuid already
 fun PlayerEntity.foundEgg(egg: Egg) = foundEggs.add(egg.id to uuid)
 
-fun PlayerEntity.getEggCount(): Int {
-    return foundEggs.count { it.second == uuid }
-}
+fun PlayerEntity.getEggCount() = foundEggs.count { it.second == uuid }

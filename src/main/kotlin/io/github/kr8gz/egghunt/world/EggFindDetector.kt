@@ -18,7 +18,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
-object EggClickDetector {
+object EggFindDetector {
     fun registerBlockClickListeners() {
         UseBlockCallback.EVENT.register { player, world, hand, result ->
             if (hand == Hand.MAIN_HAND) {
@@ -34,8 +34,8 @@ object EggClickDetector {
     }
 
     private fun eggFindListener(player: PlayerEntity, world: World, pos: BlockPos) {
-        Egg.findAtLocation(pos)?.run {
-            if (player.foundEgg(this)) {
+        Egg.findAtLocation(pos)?.let {
+            if (player.foundEgg(it)) {
                 player.eggHuntMessage("You found an egg!", Formatting.GREEN)
                 spawnFirework(world, pos)
             } else {
