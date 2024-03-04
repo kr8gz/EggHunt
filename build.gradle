@@ -33,14 +33,14 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:1.10.18+kotlin.1.9.22"
 
+    modImplementation 'maven.modrinth:sqlite-jdbc:3.41.2.1+20230506'
+
     include implementation('com.sksamuel.hoplite:hoplite-core:2.7.5')
     include implementation('com.sksamuel.hoplite:hoplite-watch:2.7.5')
     include implementation('com.sksamuel.hoplite:hoplite-toml:2.7.5')
     include implementation('org.tomlj:tomlj:1.1.0')
     include implementation('org.antlr:antlr4-runtime:4.11.1')
     include implementation('org.checkerframework:checker-qual:3.21.2')
-
-    include implementation('maven.modrinth:sqlite-jdbc:3.41.2.1+20230506')
 }
 
 processResources {

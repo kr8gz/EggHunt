@@ -10,6 +10,7 @@ import io.github.kr8gz.egghunt.world.EggPlacer
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import java.text.DecimalFormat
 
 @Suppress("UsePropertyAccessSyntax") // playerOrThrow isn't like a property lol
@@ -23,14 +24,28 @@ object EggHuntCommand {
     }
 
     private fun displayLeaderboard(context: CommandContext<ServerCommandSource>): Int {
-        context.source.sendFeedback({
-            Text.literal(buildString {
-                Database.getLeaderboard()!!.forEachIndexed { index, pair ->
-                    val (name, count) = pair
-                    append("${index + 1}. $name - $count")
+        with(context.source) {
+            sendFeedback({
+                // FIXME this is ugly af
+                val text = EggHunt.MESSAGE_PREFIX.append(Text.literal("Leaderboard").formatted(Formatting.YELLOW))
+                val executorPlayerName = player?.name?.literalString
+                val leaderboard = Database.getLeaderboard()!!
+                val topEntries = leaderboard.take(9).toMutableList()
+                leaderboard.find { it.playerName == executorPlayerName }?.let {
+                    if (it !in topEntries) topEntries[topEntries.lastIndex] = it
                 }
-            })
-        }, false)
+                topEntries.forEach {
+                    text.run {
+                        append("\n${it.rank}. ")
+                        append(Text.literal(it.playerName).formatted(if (it.playerName == executorPlayerName) Formatting.GREEN else Formatting.RED))
+                        append(Text.literal(" found").formatted(Formatting.GRAY))
+                        append(" %,d".format(it.eggsFound))
+                        append(Text.literal(" eggs").formatted(Formatting.GRAY))
+                    }
+                }
+                text
+            }, false)
+        }
         return Command.SINGLE_SUCCESS
     }
 
@@ -39,14 +54,14 @@ object EggHuntCommand {
             val player = getPlayerOrThrow()
             val item = EggPlacer.getEggItem()
 
-            item.copy().let { // copy so it can be displayed in the command feedback
-                if (!player.giveItemStack(it)) { // if the item could not be inserted
-                    player.dropItem(it, false)?.apply {
-                        resetPickupDelay()
-                        setOwner(player.getUuid())
-                    }
+            // copy so it can be displayed in the command feedback
+            item.copy().takeUnless { player.giveItemStack(it) }?.let {
+                player.dropItem(it, false)?.apply {
+                    resetPickupDelay()
+                    setOwner(player.getUuid())
                 }
             }
+
             sendFeedback({
                 Text.translatable("commands.give.success.single", 1, item.toHoverableText(), player.displayName)
             }, true)
@@ -57,11 +72,31 @@ object EggHuntCommand {
     private fun displayPlayerProgress(context: CommandContext<ServerCommandSource>): Int {
         with(context.source) {
             sendFeedback({
+                // FIXME this is ugly af too
                 val playerFound = getPlayerOrThrow().getEggCount()!!
                 val totalEggs = Database.getTotalEggCount()!!
-                // FIXME division by zero
-                val percentage = DecimalFormat("#.##").format(playerFound / totalEggs.toFloat() * 100)
-                Text.literal("$playerFound / $totalEggs ($percentage%)")
+                val text = EggHunt.MESSAGE_PREFIX
+                text.run {
+                    (playerFound / totalEggs.toFloat() * 100).takeUnless { it.isNaN() }?.let {
+                        val percentage = DecimalFormat("#.##").format(it)
+                        val percentageColor = when {
+                            it in 0f..25f -> Formatting.RED
+                            it in 25f..50f -> Formatting.GOLD
+                            it in 50f..75f -> Formatting.YELLOW
+                            playerFound == totalEggs -> Formatting.AQUA
+                            else -> Formatting.GREEN
+                        }
+                        append(Text.literal("You found ").formatted(Formatting.GRAY))
+                        append("$playerFound")
+                        append(Text.literal(" out of ").formatted(Formatting.GRAY))
+                        append("$totalEggs")
+                        append(Text.literal(" eggs (").formatted(Formatting.GRAY))
+                        append(Text.literal("$percentage%").formatted(percentageColor))
+                        append(Text.literal(")").formatted(Formatting.GRAY))
+                    } ?: run {
+                        append(Text.literal("There are no eggs to be found... yet!").formatted(Formatting.RED))
+                    }
+                }
             }, false)
         }
         return Command.SINGLE_SUCCESS

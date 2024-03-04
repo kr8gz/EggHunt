@@ -1,9 +1,10 @@
 package io.github.kr8gz.egghunt.world
 
 import io.github.kr8gz.egghunt.Database
-import io.github.kr8gz.egghunt.eggHuntMessage
+import io.github.kr8gz.egghunt.EggHunt
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.block.BlockState
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 
@@ -19,13 +20,14 @@ object EggRemover {
     @JvmStatic
     fun checkForEggRemoval(pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
         val blockChanged = oldBlock.block != newBlock.block
-        lastRemovedEggPos = if (blockChanged && Database.deleteEggAtPos(pos)) pos else null
+        lastRemovedEggPos = pos.takeIf { blockChanged && Database.deleteEggAtPos(it) }
     }
 
     fun registerPlayerBlockBreakListener() {
         PlayerBlockBreakEvents.AFTER.register { _, player, pos, _, _ ->
             if (lastRemovedEggPos == pos) {
-                player.eggHuntMessage("Egg removed!", Formatting.RED)
+                val message = Text.literal("Egg removed!").formatted(Formatting.RED)
+                player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
             }
         }
     }

@@ -2,7 +2,6 @@ package io.github.kr8gz.egghunt.world
 
 import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.EggHunt
-import io.github.kr8gz.egghunt.eggHuntMessage
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -53,13 +52,12 @@ object EggPlacer {
 
     @JvmStatic
     fun placeEggAndUpdateItem(context: ItemPlacementContext) {
-        val nbt = context.stack.nbt ?: return
-        if (nbt.getBoolean(EggHunt.MOD_NAME)) { // check for marker tag
-            val player = context.player ?: return
-            nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-            Database.createEggAtPos(context.blockPos, player.uuid)?.also { id ->
-                player.eggHuntMessage("Egg #$id placed!", Formatting.GREEN)
-            }
+        val nbt = context.stack.nbt?.takeIf { it.getBoolean(EggHunt.MOD_NAME) } ?: return
+        val player = context.player ?: return
+        nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
+        Database.createEggAtPos(context.blockPos, player.uuid)?.also { id ->
+            val message = Text.literal("Egg #$id placed!").formatted(Formatting.GREEN)
+            player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
         }
     }
 

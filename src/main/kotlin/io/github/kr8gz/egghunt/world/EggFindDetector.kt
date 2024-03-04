@@ -2,8 +2,8 @@ package io.github.kr8gz.egghunt.world
 
 import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.Database.checkFoundEgg
+import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
-import io.github.kr8gz.egghunt.eggHuntMessage
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.player.PlayerEntity
@@ -12,6 +12,7 @@ import net.minecraft.item.FireworkRocketItem
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting
@@ -39,12 +40,17 @@ object EggFindDetector {
 
         player.checkFoundEgg(pos).let {
             if (it != true) {
-                it?.also { player.eggHuntMessage("You already found this egg!", Formatting.RED) }
+                it?.also {
+                    val message = Text.literal("You already found this egg!").formatted(Formatting.RED)
+                    player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
+                }
                 return
             }
         }
 
-        player.eggHuntMessage("You found an egg!", Formatting.GREEN)
+        val message = Text.literal("You found an egg!").formatted(Formatting.GREEN)
+        player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
+
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)
             world.server?.run {

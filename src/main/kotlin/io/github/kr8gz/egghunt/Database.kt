@@ -12,7 +12,7 @@ import java.util.*
 import kotlin.io.path.createFile
 import kotlin.io.path.exists
 
-const val schemaEggTable: String = """
+const val schemaEggTable = """
 CREATE TABLE IF NOT EXISTS egg (
     id INTEGER PRIMARY KEY,
     x INT NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS egg (
 )
 """
 
-const val schemaFoundEggsTable: String = """
+const val schemaFoundEggsTable = """
 CREATE TABLE IF NOT EXISTS found_egg (
     egg_id INT NOT NULL,
     player_uuid TEXT(36) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS found_egg (
 )
 """
 
-const val schemaPlayerTable: String = """
+const val schemaPlayerTable = """
 CREATE TABLE IF NOT EXISTS player (
     uuid TEXT(36) PRIMARY KEY,
     name TEXT(100) NOT NULL
@@ -45,7 +45,7 @@ object Database {
     private val DATABASE_PATH = FabricLoader.getInstance().gameDir.resolve("${EggHunt.MOD_NAME}.db")
 
     private val connection = getNewConnection()
-        get() = if (!field.isClosed) field else getNewConnection()
+        get() = field.takeUnless { it.isClosed } ?: getNewConnection()
 
     private fun getNewConnection() = DriverManager.getConnection("jdbc:sqlite:$DATABASE_PATH")
 
@@ -140,16 +140,30 @@ object Database {
         }
     }
 
-    fun getLeaderboard(): List<Pair<String, Int>>? {
+    data class LeaderboardEntry(val rank: Int, val playerName: String, val eggsFound: Int)
+
+    fun getLeaderboard(): List<LeaderboardEntry>? {
+        val query = """
+            SELECT
+                name,
+                COUNT(*) found_count,
+                RANK() OVER (ORDER BY COUNT(*) DESC) rank
+            FROM found_egg fe
+            JOIN player p ON p.uuid = fe.player_uuid
+            GROUP BY name
+            ORDER BY found_count DESC
+        """
+
         return try {
-            // TODO shouldnt this be sorted?
-            connection.prepareStatement("SELECT name, COUNT(*) found_count FROM found_egg fe JOIN player p ON p.uuid = fe.player_uuid GROUP BY fe.player_uuid")
-                .executeQuery()
-                .use { rs ->
-                    generateSequence {
-                        if (rs.next()) rs.getString("name") to rs.getInt("found_count") else null
-                    }.toList()
-                }
+            connection.prepareStatement(query).executeQuery().use { rs ->
+                generateSequence {
+                    rs.takeIf { it.next() }?.run { LeaderboardEntry(
+                        getInt("rank"),
+                        getString("name"),
+                        getInt("found_count"),
+                    ) }
+                }.toList()
+            }
         } catch (e: SQLException) {
             EggHunt.LOGGER.error("Unable to execute leaderboard query", e)
             null
