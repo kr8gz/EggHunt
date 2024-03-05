@@ -12,7 +12,6 @@ import net.minecraft.item.FireworkRocketItem
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
-import net.minecraft.server.command.CommandOutput
 import net.minecraft.util.ActionResult
 import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting

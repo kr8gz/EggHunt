@@ -3,7 +3,6 @@ package io.github.kr8gz.egghunt
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
-import org.sqlite.SQLiteException
 import java.io.IOException
 import java.sql.DriverManager
 import java.sql.ResultSet
