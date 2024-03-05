@@ -12,7 +12,7 @@ import net.minecraft.item.FireworkRocketItem
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
-import net.minecraft.text.Text
+import net.minecraft.server.command.CommandOutput
 import net.minecraft.util.ActionResult
 import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting
@@ -41,21 +41,19 @@ object EggFindDetector {
         player.checkFoundEgg(pos).let {
             if (it != true) {
                 it?.also {
-                    val message = Text.literal("You already found this egg!").formatted(Formatting.RED)
-                    player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
+                    player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}You already found this egg!"))
                 }
                 return
             }
         }
 
-        val message = Text.literal("You found an egg!").formatted(Formatting.GREEN)
-        player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
-
+        player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}You found an egg!"))
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)
             world.server?.run {
                 commands.forEach {
-                    commandManager.executeWithPrefix(commandSource, "execute as ${player.uuid} run $it")
+                    val source = commandSource.takeUnless { sendCommandFeedback }?.withSilent() ?: commandSource
+                    commandManager.executeWithPrefix(source, "execute as ${player.uuid} run $it")
                 }
             }
         }

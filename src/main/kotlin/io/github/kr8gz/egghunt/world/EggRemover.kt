@@ -4,7 +4,6 @@ import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.EggHunt
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.block.BlockState
-import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 
@@ -26,8 +25,7 @@ object EggRemover {
     fun registerPlayerBlockBreakListener() {
         PlayerBlockBreakEvents.AFTER.register { _, player, pos, _, _ ->
             if (lastRemovedEggPos == pos) {
-                val message = Text.literal("Egg removed!").formatted(Formatting.RED)
-                player.sendMessage(EggHunt.MESSAGE_PREFIX.append(message))
+                player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}Egg removed!"))
             }
         }
     }

@@ -14,7 +14,7 @@ public class BlockItemMixin {
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At("RETURN"))
     private void place(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir) {
         if (cir.getReturnValue().isAccepted()) {
-            EggPlacer.placeEggAndUpdateItem(context);
+            EggPlacer.tryPlaceEggAndUpdateItem(context);
         }
     }
 }

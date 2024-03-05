@@ -215,8 +215,8 @@ object Database {
     }
 
     /**
-     * @return `false` if the egg has already been found by the player,
-     * `null` if a database operation failed, or `true` otherwise
+     * @return whether the egg has not already been found by the player,
+     * or `null` if a database operation failed
      **/
     fun PlayerEntity.checkFoundEgg(pos: BlockPos): Boolean? {
         val eggId = with(pos) {
@@ -236,16 +236,12 @@ object Database {
         }
 
         return try {
-            connection.prepareStatement("INSERT INTO found_egg (egg_id, player_uuid) VALUES (?, ?)")
+            connection.prepareStatement("INSERT OR IGNORE INTO found_egg (egg_id, player_uuid) VALUES (?, ?)")
                 .run {
                     setInt(1, eggId)
                     setString(2, uuid.toString())
-                    executeUpdate()
+                    executeUpdate() > 0
                 }
-            true
-        } catch (e: SQLiteException) {
-            // primary key constraint violated, entry already exists
-            false
         } catch (e: SQLException) {
             EggHunt.LOGGER.error("Unable to register $uuid finding egg $eggId", e)
             null
