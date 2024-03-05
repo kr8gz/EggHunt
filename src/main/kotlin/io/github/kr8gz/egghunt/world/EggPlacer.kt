@@ -27,7 +27,7 @@ object EggPlacer {
         val nbt = context.stack.nbt?.takeIf { it.getBoolean(EggHunt.MOD_NAME) } ?: return
         val player = context.player ?: return
         nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-        Database.createEggAtPos(context.blockPos, player.uuid)?.also { id ->
+        Database.createEggAtPos(context.world, context.blockPos, player.uuid)?.also { id ->
             player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}Egg #$id placed!"))
         }
     }

@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerWorld.class)
-public class WorldMixin {
+public abstract class WorldMixin {
     @Inject(method = "onBlockChanged", at = @At("HEAD"))
     private void onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock, CallbackInfo ci) {
-        EggRemover.checkForEggRemoval(pos, oldBlock, newBlock);
+        EggRemover.checkForEggRemoval((ServerWorld) (Object) this, pos, oldBlock, newBlock);
     }
 }

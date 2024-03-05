@@ -35,9 +35,9 @@ object EggFindDetector {
     }
 
     private fun eggFindListener(player: PlayerEntity, world: World, pos: BlockPos) {
-        if (!Database.isEggAtPos(pos)) return
+        if (!Database.isEggAtPos(world, pos)) return
 
-        player.checkFoundEgg(pos).let {
+        player.checkFoundEgg(world, pos).let {
             if (it != true) {
                 it?.also {
                     player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}You already found this egg!"))

@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.block.BlockState
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 
 object EggRemover {
     /**
@@ -14,17 +15,17 @@ object EggRemover {
      * the last egg that was removed. Using this, we can always remove the egg
      * first and send a message later when it was actually broken by a player.
      **/
-    private var lastRemovedEggPos: BlockPos? = null
+    private var lastRemovedEggPos: Pair<World, BlockPos>? = null
 
     @JvmStatic
-    fun checkForEggRemoval(pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
+    fun checkForEggRemoval(world: World, pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
         val blockChanged = oldBlock.block != newBlock.block
-        lastRemovedEggPos = pos.takeIf { blockChanged && Database.deleteEggAtPos(it) }
+        lastRemovedEggPos = (world to pos).takeIf { blockChanged && Database.deleteEggAtPos(world, pos) }
     }
 
     fun registerPlayerBlockBreakListener() {
-        PlayerBlockBreakEvents.AFTER.register { _, player, pos, _, _ ->
-            if (lastRemovedEggPos == pos) {
+        PlayerBlockBreakEvents.AFTER.register { world, player, pos, _, _ ->
+            if (lastRemovedEggPos == world to pos) {
                 player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}Egg removed!"))
             }
         }

@@ -1,20 +1,21 @@
-package io.github.kr8gz.egghunt.command
+package io.github.kr8gz.egghunt.commands
 
-import com.mojang.brigadier.Command
 import com.mojang.brigadier.context.CommandContext
 import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
-import io.github.kr8gz.egghunt.pluralSuffix
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting.*
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
-internal fun displayPlayerProgress(context: CommandContext<ServerCommandSource>): Int {
-    context.source.sendFeedback({
+object DisplayCommands {
+    fun getProgressMessage(context: CommandContext<ServerCommandSource>): Text {
         val totalEggs = Database.getTotalEggCount()!!.also {
             if (it == 0) {
-                return@sendFeedback EggHunt.MESSAGE_PREFIX.append("${RED}There are no eggs to be found... yet!")
+                return EggHunt.MESSAGE_PREFIX.append("${RED}There are no eggs to be found... yet!")
             }
         }
 
@@ -30,11 +31,16 @@ internal fun displayPlayerProgress(context: CommandContext<ServerCommandSource>)
                 foundPercentage >= 25 -> GOLD
                 else -> RED
             }
-            val formattedPercentage = DecimalFormat("#.##").format(foundPercentage)
+
+            val formattedPercentage = run {
+                val decimalSymbols = DecimalFormatSymbols(Locale.US)
+                DecimalFormat("#.##", decimalSymbols).format(foundPercentage)
+            }
+
             "$GRAY($percentageColor$formattedPercentage%$GRAY)"
         }
 
-        when {
+        return when {
             foundAllEggs && totalEggs == 1 -> EggHunt.MESSAGE_PREFIX.append(
                 "${GRAY}You found ${WHITE}the only ${GRAY}egg! $percentageText"
             )
@@ -45,26 +51,23 @@ internal fun displayPlayerProgress(context: CommandContext<ServerCommandSource>)
                 "${GRAY}You found $WHITE$playerFound ${GRAY}out of $WHITE$totalEggs ${GRAY}egg${totalEggs.pluralSuffix("s")} $percentageText"
             )
         }
-    }, false)
-    return Command.SINGLE_SUCCESS
-}
+    }
 
-internal fun displayLeaderboard(context: CommandContext<ServerCommandSource>): Int {
-    context.source.sendFeedback({
+    fun getLeaderboardMessage(context: CommandContext<ServerCommandSource>): Text {
         val leaderboard = Database.getLeaderboard()!!.also {
             if (it.isEmpty()) {
-                return@sendFeedback EggHunt.MESSAGE_PREFIX.append("${RED}No eggs have been found so far...")
+                return EggHunt.MESSAGE_PREFIX.append("${RED}No eggs have been found so far...")
             }
         }
 
-        val executorPlayerName = context.source.player?.name?.literalString
+        val executorPlayerName = context.source.player?.name?.string
 
         val topEntries = leaderboard.take(9).toMutableList()
         leaderboard.find { it.playerName == executorPlayerName }?.let {
             if (it !in topEntries) topEntries[topEntries.lastIndex] = it
         }
 
-        EggHunt.MESSAGE_PREFIX.apply {
+        return EggHunt.MESSAGE_PREFIX.apply {
             append("${YELLOW}Leaderboard")
             topEntries.forEach { entry ->
                 val playerNameColor = if (entry.playerName == executorPlayerName) GREEN else RED
@@ -72,6 +75,7 @@ internal fun displayLeaderboard(context: CommandContext<ServerCommandSource>): I
                 append("\n$WHITE${entry.rank}. $playerNameColor${entry.playerName} ${GRAY}found $foundEggsText")
             }
         }
-    }, false)
-    return Command.SINGLE_SUCCESS
+    }
 }
+
+private fun Int.pluralSuffix(suffix: String) = if (this != 1) suffix else ""

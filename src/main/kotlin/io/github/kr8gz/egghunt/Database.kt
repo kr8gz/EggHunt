@@ -3,6 +3,7 @@ package io.github.kr8gz.egghunt
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 import java.io.IOException
 import java.sql.DriverManager
 import java.sql.ResultSet
@@ -14,6 +15,7 @@ import kotlin.io.path.exists
 const val schemaEggTable = """
 CREATE TABLE IF NOT EXISTS egg (
     id INTEGER PRIMARY KEY,
+    world TEXT(100) NOT NULL,
     x INT NOT NULL,
     y INT NOT NULL,
     z INT NOT NULL,
@@ -36,7 +38,7 @@ CREATE TABLE IF NOT EXISTS found_egg (
 const val schemaPlayerTable = """
 CREATE TABLE IF NOT EXISTS player (
     uuid TEXT(36) PRIMARY KEY,
-    name TEXT(100) NOT NULL
+    name TEXT(16) NOT NULL
 )
 """
 
@@ -80,14 +82,15 @@ object Database {
     /**
      * @return the ID of the new egg, or `null` if it could not be created
      **/
-    fun createEggAtPos(pos: BlockPos, placedByUUID: UUID): Int? {
+    fun createEggAtPos(world: World, pos: BlockPos, placedByUUID: UUID): Int? {
         return try {
-            connection.prepareStatement("INSERT INTO egg (x, y, z, placed_by_uuid) VALUES (?, ?, ?, ?)")
+            connection.prepareStatement("INSERT INTO egg (world, x, y, z, placed_by_uuid) VALUES (?, ?, ?, ?, ?)")
                 .run {
-                    setInt(1, pos.x)
-                    setInt(2, pos.y)
-                    setInt(3, pos.z)
-                    setString(4, placedByUUID.toString())
+                    setString(1, world.registryKey.value.toString())
+                    setInt(2, pos.x)
+                    setInt(3, pos.y)
+                    setInt(4, pos.z)
+                    setString(5, placedByUUID.toString())
                     executeUpdate()
                 }
 
@@ -105,13 +108,14 @@ object Database {
      * @return whether there is an egg at the position,
      * or `false` if the query could not be executed
      **/
-    fun isEggAtPos(pos: BlockPos): Boolean = with(pos) {
+    fun isEggAtPos(world: World, pos: BlockPos): Boolean = with(pos) {
         try {
-            connection.prepareStatement("SELECT 1 FROM egg WHERE x = ? AND y = ? AND z = ?")
+            connection.prepareStatement("SELECT 1 FROM egg WHERE WORLD = ? AND x = ? AND y = ? AND z = ?")
                 .run {
-                    setInt(1, x)
-                    setInt(2, y)
-                    setInt(3, z)
+                    setString(1, world.registryKey.value.toString())
+                    setInt(2, x)
+                    setInt(3, y)
+                    setInt(4, z)
                     executeQuery()
                 }
                 .use(ResultSet::next)
@@ -124,13 +128,14 @@ object Database {
     /**
      * @return whether an egg was deleted at the position
      **/
-    fun deleteEggAtPos(pos: BlockPos): Boolean = with(pos) {
+    fun deleteEggAtPos(world: World, pos: BlockPos): Boolean = with(pos) {
         try {
-            connection.prepareStatement("DELETE FROM egg WHERE x = ? AND y = ? AND z = ?")
+            connection.prepareStatement("DELETE FROM egg WHERE world = ? AND x = ? AND y = ? AND z = ?")
                 .run {
-                    setInt(1, x)
-                    setInt(2, y)
-                    setInt(3, z)
+                    setString(1, world.registryKey.value.toString())
+                    setInt(2, x)
+                    setInt(3, y)
+                    setInt(4, z)
                     executeUpdate() > 0
                 }
         } catch (e: SQLException) {
@@ -184,7 +189,7 @@ object Database {
     }
 
     fun updatePlayerName(player: PlayerEntity): Unit = with(player) {
-        val name = name.literalString
+        val name = name.string
         try {
             connection.prepareStatement("INSERT INTO player (uuid, name) VALUES(?, ?) ON CONFLICT(uuid) DO UPDATE SET name=?")
                 .run {
@@ -217,14 +222,15 @@ object Database {
      * @return whether the egg has not already been found by the player,
      * or `null` if a database operation failed
      **/
-    fun PlayerEntity.checkFoundEgg(pos: BlockPos): Boolean? {
+    fun PlayerEntity.checkFoundEgg(world: World, pos: BlockPos): Boolean? {
         val eggId = with(pos) {
             try {
-                connection.prepareStatement("SELECT id FROM egg WHERE x = ? AND y = ? AND z = ?")
+                connection.prepareStatement("SELECT id FROM egg WHERE world = ? AND x = ? AND y = ? AND z = ?")
                     .run {
-                        setInt(1, x)
-                        setInt(2, y)
-                        setInt(3, z)
+                        setString(1, world.registryKey.value.toString())
+                        setInt(2, x)
+                        setInt(3, y)
+                        setInt(4, z)
                         executeQuery()
                     }
                     .use { rs -> if (rs.next()) rs.getInt("id") else return false }
