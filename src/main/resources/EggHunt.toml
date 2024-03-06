@@ -1,8 +1,12 @@
 # The default permission level which allows players to modify eggs
 # and use the mod's commands, when no `egghunt.*` permissions are set.
 # Permissions can be customized for example using the LuckPerms mod.
-# See https://minecraft.wiki/w/Permission%20level for more details.
-defaultPermissionLevel = 1
+# See https://minecraft.wiki/w/Permission_level for more details.
+defaultPermissionLevel = 2
+
+# Whether the feedback from the commands in the settings below
+# should be broadcast to server operators.
+sendCommandFeedback = false
 
 [onEggFound]
 # Whether to spawn a firework rocket whenever a new egg is found by a player.
@@ -15,10 +19,6 @@ commands = [
     # Example command. You can uncomment or delete this.
     # "give @s diamond",
 ]
-
-# Whether the feedback from the commands executed whenever an egg is found
-# should be broadcast to server operators.
-sendCommandFeedback = false
 
 [onFoundAll]
 # A list of commands to run when a player has found all eggs.

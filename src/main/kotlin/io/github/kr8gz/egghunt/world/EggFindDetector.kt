@@ -2,6 +2,7 @@ package io.github.kr8gz.egghunt.world
 
 import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.Database.checkFoundEgg
+import io.github.kr8gz.egghunt.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
@@ -50,15 +51,12 @@ object EggFindDetector {
 
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)
-            world.server?.run {
-                commands.forEach {
-                    val source = commandSource.takeIf { sendCommandFeedback } ?: commandSource.withSilent()
-                    commandManager.executeWithPrefix(source, "execute as ${player.uuid} run $it")
-                }
-            }
+            runCommands(world, player, commands)
         }
 
-        // TODO onFoundAll
+        if ((Database.getTotalEggCount() ?: return) == (player.getEggCount() ?: return)) {
+            runCommands(world, player, config.onFoundAll.commands)
+        }
     }
 
     private fun spawnFirework(world: World, pos: BlockPos) {
@@ -77,5 +75,14 @@ object EggFindDetector {
         world.spawnEntity(with(pos.toCenterPos()) {
             FireworkRocketEntity(world, x, y, z, fireworkItem)
         })
+    }
+
+    private fun runCommands(world: World, player: PlayerEntity, commands: List<String>) {
+        world.server?.run {
+            commands.forEach {
+                val source = commandSource.takeIf { config.sendCommandFeedback } ?: commandSource.withSilent()
+                commandManager.executeWithPrefix(source, "execute as ${player.uuid} run $it")
+            }
+        }
     }
 }

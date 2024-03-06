@@ -3,6 +3,7 @@ package io.github.kr8gz.egghunt.commands
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
+import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.Database.resetFoundEggs
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
@@ -14,6 +15,7 @@ import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 
 typealias ServerCommandContext = CommandContext<ServerCommandSource>
 
@@ -72,8 +74,15 @@ object EggHuntCommand {
     }
 
     private fun removeAllEggs(context: ServerCommandContext): Int {
-        context.source.sendFeedback({ EggHunt.MESSAGE_PREFIX.append("TODO") }, false)
-        return Command.SINGLE_SUCCESS
+        return Database.deleteAllEggs()?.let { count ->
+            context.source.sendFeedback({ EggHunt.MESSAGE_PREFIX.append("Removed $count eggs") }, true)
+            count
+        } ?: run {
+            context.source.sendFeedback({
+                EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}Could not remove eggs, please try again!")
+            }, false)
+            0
+        }
     }
 
     private fun resetPlayerProgress(context: ServerCommandContext, players: Collection<PlayerEntity>): Int {

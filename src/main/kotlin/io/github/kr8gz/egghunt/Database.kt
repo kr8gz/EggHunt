@@ -145,11 +145,16 @@ object Database {
     }
 
     /**
-     * @return a list of positions of the eggs that were deleted,
+     * @return the number of eggs which were deleted,
      * or `null` if a database operation failed
      **/
-    fun deleteAllEggs(): List<Pair<World, BlockPos>>? {
-        TODO()
+    fun deleteAllEggs(): Int? {
+        return try {
+            connection.prepareStatement("DELETE FROM egg").executeUpdate()
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to delete eggs", e)
+            null
+        }
     }
 
     /**
