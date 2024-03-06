@@ -35,7 +35,7 @@ object EggFindDetector {
     }
 
     private fun eggFindListener(player: PlayerEntity, world: World, pos: BlockPos) {
-        if (!Database.isEggAtPos(world, pos)) return
+        if (player.isSpectator || !Database.isEggAtPos(world, pos)) return
 
         player.checkFoundEgg(world, pos).let {
             if (it != true) {
@@ -47,15 +47,18 @@ object EggFindDetector {
         }
 
         player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}You found an egg!"))
+
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)
             world.server?.run {
                 commands.forEach {
-                    val source = commandSource.takeUnless { sendCommandFeedback }?.withSilent() ?: commandSource
+                    val source = commandSource.takeIf { sendCommandFeedback } ?: commandSource.withSilent()
                     commandManager.executeWithPrefix(source, "execute as ${player.uuid} run $it")
                 }
             }
         }
+
+        // TODO onFoundAll
     }
 
     private fun spawnFirework(world: World, pos: BlockPos) {

@@ -3,6 +3,7 @@ package io.github.kr8gz.egghunt.world
 import io.github.kr8gz.egghunt.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
+import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -26,6 +27,8 @@ object EggPlacer {
     fun tryPlaceEggAndUpdateItem(context: ItemPlacementContext) {
         val nbt = context.stack.nbt?.takeIf { it.getBoolean(EggHunt.MOD_NAME) } ?: return
         val player = context.player ?: return
+        if (!Permissions.check(player, EggHunt.Permissions.PLACE, config.defaultPermissionLevel)) return
+
         nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
         Database.createEggAtPos(context.world, context.blockPos, player.uuid)?.also { id ->
             player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}Egg #$id placed!"))

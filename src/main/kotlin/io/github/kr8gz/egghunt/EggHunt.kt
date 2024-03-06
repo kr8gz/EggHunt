@@ -15,8 +15,17 @@ import org.apache.logging.log4j.Logger
 object EggHunt : ModInitializer {
     const val MOD_ID = "egghunt"
     val MOD_NAME = this::class.simpleName!!
+
     val MESSAGE_PREFIX: MutableText = Text.literal("[$MOD_NAME] ")
         get() = field.copy() // otherwise all modifications will apply to the same text object
+
+    object Permissions {
+        const val PLACE = "$MOD_ID.place"
+        const val REMOVE = "$MOD_ID.remove"
+        const val RESET = "$MOD_ID.reset"
+        const val RESET_EGGS = "$RESET.eggs"
+        const val RESET_PLAYER = "$RESET.player"
+    }
 
     val LOGGER: Logger = LogManager.getLogger()
 
@@ -29,7 +38,7 @@ object EggHunt : ModInitializer {
             Database.updatePlayerName(handler.player)
         }
 
-        EggRemover.registerPlayerBlockBreakListener()
+        EggRemover.registerBlockBreakListeners()
         EggFindDetector.registerBlockClickListeners()
 
         Database.initialize()

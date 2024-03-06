@@ -16,6 +16,7 @@ repositories {
             includeGroup "maven.modrinth"
         }
     }
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -33,8 +34,13 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:1.10.18+kotlin.1.9.22"
 
+    // Database
     modImplementation 'maven.modrinth:sqlite-jdbc:3.41.2.1+20230506'
 
+    // Permissions API
+    include modImplementation('me.lucko:fabric-permissions-api:0.3-SNAPSHOT')
+
+    // Config and transitive dependencies
     include implementation('com.sksamuel.hoplite:hoplite-core:2.7.5')
     include implementation('com.sksamuel.hoplite:hoplite-watch:2.7.5')
     include implementation('com.sksamuel.hoplite:hoplite-toml:2.7.5')

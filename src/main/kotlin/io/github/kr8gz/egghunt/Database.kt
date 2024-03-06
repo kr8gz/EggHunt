@@ -144,6 +144,28 @@ object Database {
         }
     }
 
+    /**
+     * @return a list of positions of the eggs that were deleted,
+     * or `null` if a database operation failed
+     **/
+    fun deleteAllEggs(): List<Pair<World, BlockPos>>? {
+        TODO()
+    }
+
+    /**
+     * @return the total number of eggs in the database, or `null` if a database operation failed
+     **/
+    fun getTotalEggCount(): Int? {
+        return try {
+            connection.prepareStatement("SELECT COUNT(*) AS total_eggs FROM egg")
+                .executeQuery()
+                .getInt("total_eggs")
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to get total egg count", e)
+            null
+        }
+    }
+
     data class LeaderboardEntry(val rank: Int, val playerName: String, val eggsFound: Int)
 
     fun getLeaderboard(): List<LeaderboardEntry>? {
@@ -170,20 +192,6 @@ object Database {
             }
         } catch (e: SQLException) {
             EggHunt.LOGGER.error("Unable to execute leaderboard query", e)
-            null
-        }
-    }
-
-    /**
-     * @return the total number of eggs in the database, or `null` if a database operation failed
-     **/
-    fun getTotalEggCount(): Int? {
-        return try {
-            connection.prepareStatement("SELECT COUNT(*) AS total_eggs FROM egg")
-                .executeQuery()
-                .getInt("total_eggs")
-        } catch (e: SQLException) {
-            EggHunt.LOGGER.error("Unable to get total egg count", e)
             null
         }
     }
@@ -250,6 +258,23 @@ object Database {
         } catch (e: SQLException) {
             EggHunt.LOGGER.error("Unable to register $uuid finding egg $eggId", e)
             null
+        }
+    }
+
+    /**
+     * @return whether the found eggs could be reset
+     **/
+    fun PlayerEntity.resetFoundEggs(): Boolean {
+        return try {
+            connection.prepareStatement("DELETE FROM found_egg WHERE player_uuid = ?")
+                .run {
+                    setString(1, uuid.toString())
+                    executeUpdate()
+                }
+            true
+        } catch (e: SQLException) {
+            EggHunt.LOGGER.error("Unable to delete egg at position $x $y $z", e)
+            false
         }
     }
 }
