@@ -1,7 +1,7 @@
 package io.github.kr8gz.egghunt.commands
 
-import io.github.kr8gz.egghunt.Database
-import io.github.kr8gz.egghunt.Database.getEggCount
+import io.github.kr8gz.egghunt.database.Database
+import io.github.kr8gz.egghunt.database.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting.*
@@ -11,15 +11,12 @@ import java.util.Locale
 
 object DisplayCommands {
     fun getProgressMessage(context: ServerCommandContext): Text {
-        val totalEggs = Database.getTotalEggCount()?.also {
-            if (it == 0) return EggHunt.MESSAGE_PREFIX.append("${RED}There are no eggs to be found... yet!")
-        } ?: return EggHunt.MESSAGE_PREFIX.append("${RED}Could not determine total number of eggs, please try again!")
+        val totalEggs = Database.getTotalEggCount().also {
+            if (it == 0L) return EggHunt.MESSAGE_PREFIX.append("${RED}There are no eggs to be found... yet!")
+        }
 
         @Suppress("UsePropertyAccessSyntax")
-        val playerFound = context.source.getPlayerOrThrow().getEggCount() ?: return EggHunt.MESSAGE_PREFIX.append(
-            "${RED}Could not determine number of found eggs, please try again!"
-        )
-
+        val playerFound = context.source.getPlayerOrThrow().getEggCount()
         val foundAllEggs = playerFound == totalEggs
 
         val percentageText = (playerFound / totalEggs.toFloat() * 100).let { foundPercentage ->
@@ -40,7 +37,7 @@ object DisplayCommands {
         }
 
         return when {
-            foundAllEggs && totalEggs == 1 -> EggHunt.MESSAGE_PREFIX.append(
+            foundAllEggs && totalEggs == 1L -> EggHunt.MESSAGE_PREFIX.append(
                 "${GRAY}You found ${WHITE}the only ${GRAY}egg! $percentageText"
             )
             foundAllEggs -> EggHunt.MESSAGE_PREFIX.append(
@@ -53,9 +50,9 @@ object DisplayCommands {
     }
 
     fun getLeaderboardMessage(context: ServerCommandContext): Text {
-        val leaderboard = Database.getLeaderboard()?.also {
+        val leaderboard = Database.getLeaderboard().also {
             if (it.isEmpty()) return EggHunt.MESSAGE_PREFIX.append("${RED}No eggs have been found so far...")
-        } ?: return EggHunt.MESSAGE_PREFIX.append("${RED}Could not retrieve the leaderboard, please try again!")
+        }
 
         val executorPlayerName = context.source.player?.name?.string
 

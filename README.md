@@ -5,3 +5,7 @@
       they appear correctly in console among other things
 
 - [ ] Rewrite database operations using the Exposed framework?
+
+- [ ] [Server-side translations](https://github.com/NucleoidMC/Server-Translations/)
+
+- [ ] Publishing

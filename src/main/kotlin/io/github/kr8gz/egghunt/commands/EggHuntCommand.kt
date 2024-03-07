@@ -3,8 +3,8 @@ package io.github.kr8gz.egghunt.commands
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
-import io.github.kr8gz.egghunt.Database
-import io.github.kr8gz.egghunt.Database.resetFoundEggs
+import io.github.kr8gz.egghunt.database.Database
+import io.github.kr8gz.egghunt.database.Database.resetFoundEggs
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
 import io.github.kr8gz.egghunt.world.EggPlacer
@@ -15,7 +15,6 @@ import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
-import net.minecraft.util.Formatting
 
 typealias ServerCommandContext = CommandContext<ServerCommandSource>
 
@@ -74,26 +73,18 @@ object EggHuntCommand {
     }
 
     private fun removeAllEggs(context: ServerCommandContext): Int {
-        return Database.deleteAllEggs()?.let { count ->
+        return Database.deleteAllEggs().also { count ->
             context.source.sendFeedback({ EggHunt.MESSAGE_PREFIX.append("Removed $count eggs") }, true)
-            count
-        } ?: run {
-            context.source.sendFeedback({
-                EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}Could not remove eggs, please try again!")
-            }, false)
-            0
         }
     }
 
     private fun resetPlayerProgress(context: ServerCommandContext, players: Collection<PlayerEntity>): Int {
-        return players.filter { it.resetFoundEggs() }.size.also { count ->
+        return players.onEach { it.resetFoundEggs() }.size.also { count ->
             context.source.sendFeedback({
-                var message = "Reset found eggs for $count player${count.pluralSuffix("s")}"
-                if (count < players.size) message += " (${players.size - count} failed)"
-                EggHunt.MESSAGE_PREFIX.append(message)
+                EggHunt.MESSAGE_PREFIX.append("Reset found eggs for $count player${count.pluralSuffix("s")}")
             }, true)
         }
     }
 }
 
-fun Int.pluralSuffix(suffix: String) = if (this != 1) suffix else ""
+fun Number.pluralSuffix(suffix: String) = if (this != 1) suffix else ""

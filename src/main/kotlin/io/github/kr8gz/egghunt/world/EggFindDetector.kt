@@ -1,8 +1,8 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.Database
-import io.github.kr8gz.egghunt.Database.checkFoundEgg
-import io.github.kr8gz.egghunt.Database.getEggCount
+import io.github.kr8gz.egghunt.database.Database
+import io.github.kr8gz.egghunt.database.Database.checkFoundEgg
+import io.github.kr8gz.egghunt.database.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
@@ -36,15 +36,11 @@ object EggFindDetector {
     }
 
     private fun eggFindListener(player: PlayerEntity, world: World, pos: BlockPos) {
-        if (player.isSpectator || !Database.isEggAtPos(world, pos)) return
+        if (player.isSpectator || !Database.isEggAtPos(pos within world)) return
 
-        player.checkFoundEgg(world, pos).let {
-            if (it != true) {
-                it?.also {
-                    player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}You already found this egg!"))
-                }
-                return
-            }
+        if (!player.checkFoundEgg(pos within world)) {
+            player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}You already found this egg!"))
+            return
         }
 
         player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}You found an egg!"))
@@ -54,7 +50,7 @@ object EggFindDetector {
             runCommands(world, player, commands)
         }
 
-        if ((Database.getTotalEggCount() ?: return) == (player.getEggCount() ?: return)) {
+        if (Database.getTotalEggCount() == player.getEggCount()) {
             runCommands(world, player, config.onFoundAll.commands)
         }
     }

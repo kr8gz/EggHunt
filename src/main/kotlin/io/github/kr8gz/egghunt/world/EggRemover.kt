@@ -1,6 +1,6 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.Database
+import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
 import me.lucko.fabric.api.permissions.v0.Permissions
@@ -23,12 +23,12 @@ object EggRemover {
     @JvmStatic
     fun checkForEggRemoval(world: World, pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
         val blockChanged = oldBlock.block != newBlock.block
-        lastRemovedEggPos = (pos within world).takeIf { blockChanged && Database.deleteEggAtPos(world, pos) }
+        lastRemovedEggPos = (pos within world).takeIf { blockChanged && Database.deleteEgg(it) }
     }
 
     fun registerBlockBreakListeners() {
         PlayerBlockBreakEvents.BEFORE.register { world, player, pos, _, _ ->
-            if (!Database.isEggAtPos(world, pos)) return@register true
+            if (!Database.isEggAtPos(pos within world)) return@register true
 
             Permissions.check(player, EggHunt.Permissions.REMOVE, config.defaultPermissionLevel).also { hasPermission ->
                 if (!hasPermission) player.sendMessage(
@@ -44,5 +44,3 @@ object EggRemover {
         }
     }
 }
-
-infix fun BlockPos.within(world: World): GlobalPos = GlobalPos.create(world.registryKey, this)
