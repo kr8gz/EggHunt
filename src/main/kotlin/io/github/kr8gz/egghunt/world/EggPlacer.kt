@@ -3,6 +3,7 @@ package io.github.kr8gz.egghunt.world
 import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
+import io.github.kr8gz.egghunt.plus
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
@@ -31,7 +32,7 @@ object EggPlacer {
 
         nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
         Database.Eggs.create(context.blockPos within context.world, player).also { id ->
-            player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}Egg #$id placed!"))
+            player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.GREEN + "Egg #$id placed!"))
         }
     }
 

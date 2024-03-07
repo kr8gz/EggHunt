@@ -4,6 +4,7 @@ import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
 import io.github.kr8gz.egghunt.database.inDatabase
+import io.github.kr8gz.egghunt.plus
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.player.PlayerEntity
@@ -38,11 +39,11 @@ object EggFindDetector {
         if (player.isSpectator || !Database.Eggs.isAtPosition(pos within world)) return
 
         if (!player.inDatabase().checkFoundEgg(pos within world)) {
-            player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}You already found this egg!"))
+            player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.RED + "You already found this egg!"))
             return
         }
 
-        player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}You found an egg!"))
+        player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.GREEN + "You found an egg!"))
 
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)

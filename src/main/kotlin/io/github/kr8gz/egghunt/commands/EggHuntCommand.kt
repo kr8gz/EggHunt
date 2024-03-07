@@ -7,6 +7,7 @@ import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
 import io.github.kr8gz.egghunt.database.inDatabase
+import io.github.kr8gz.egghunt.pluralSuffix
 import io.github.kr8gz.egghunt.world.EggPlacer
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.command.argument.EntityArgumentType
