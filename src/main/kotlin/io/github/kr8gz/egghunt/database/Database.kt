@@ -86,4 +86,11 @@ object Database {
             .toList()
             .map { row -> LeaderboardEntry(row[rank], row[name], row[count]) }
     }
+
+    private fun GlobalPos.queryHasEgg() = with(Tables.Eggs) {
+        (world eq dimension.value.toString())
+            .and(x eq pos.x)
+            .and(y eq pos.y)
+            .and(z eq pos.z)
+    }
 }
