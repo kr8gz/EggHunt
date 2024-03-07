@@ -30,7 +30,7 @@ object EggPlacer {
         if (!Permissions.check(player, EggHunt.Permissions.PLACE, config.defaultPermissionLevel)) return
 
         nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-        Database.createEgg(context.blockPos within context.world, player).also { id ->
+        Database.Eggs.create(context.blockPos within context.world, player).also { id ->
             player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.GREEN}Egg #$id placed!"))
         }
     }

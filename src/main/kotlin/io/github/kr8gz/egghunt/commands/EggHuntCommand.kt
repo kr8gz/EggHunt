@@ -4,9 +4,9 @@ import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
 import io.github.kr8gz.egghunt.database.Database
-import io.github.kr8gz.egghunt.database.Database.resetFoundEggs
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
+import io.github.kr8gz.egghunt.database.inDatabase
 import io.github.kr8gz.egghunt.world.EggPlacer
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.command.argument.EntityArgumentType
@@ -73,18 +73,16 @@ object EggHuntCommand {
     }
 
     private fun removeAllEggs(context: ServerCommandContext): Int {
-        return Database.deleteAllEggs().also { count ->
+        return Database.Eggs.deleteAll().also { count ->
             context.source.sendFeedback({ EggHunt.MESSAGE_PREFIX.append("Removed $count eggs") }, true)
         }
     }
 
     private fun resetPlayerProgress(context: ServerCommandContext, players: Collection<PlayerEntity>): Int {
-        return players.onEach { it.resetFoundEggs() }.size.also { count ->
+        return players.onEach { it.inDatabase().resetFoundEggs() }.size.also { count ->
             context.source.sendFeedback({
                 EggHunt.MESSAGE_PREFIX.append("Reset found eggs for $count player${count.pluralSuffix("s")}")
             }, true)
         }
     }
 }
-
-fun Number.pluralSuffix(suffix: String) = if (this != 1) suffix else ""

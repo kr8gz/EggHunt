@@ -14,77 +14,76 @@ object Database {
 
     fun initialize() {
         Database.connect("jdbc:sqlite:$DATABASE_PATH?foreign_keys=on")
-        createTables()
+        Tables.create()
     }
 
-    /** @return the ID of the new egg */
-    fun createEgg(globalPos: GlobalPos, placedByPlayer: PlayerEntity): Int = transaction {
-        val inserted = Eggs.insert {
-            it[world] = globalPos.dimension.value.toString()
-            with(globalPos) {
-                it[x] = pos.x
-                it[y] = pos.y
-                it[z] = pos.z
+    object Eggs {
+        /** @return the ID of the new egg */
+        fun create(globalPos: GlobalPos, placedByPlayer: PlayerEntity): Int = transaction {
+            val inserted = Tables.Eggs.insert {
+                it[world] = globalPos.dimension.value.toString()
+                with(globalPos) {
+                    it[x] = pos.x
+                    it[y] = pos.y
+                    it[z] = pos.z
+                }
+                it[placedBy] = placedByPlayer.uuid
             }
-            it[placedBy] = placedByPlayer.uuid
+            inserted[Tables.Eggs.id].value
         }
-        inserted[Eggs.id].value
+
+        fun isAtPosition(pos: GlobalPos): Boolean = transaction {
+            Tables.Eggs.selectAll().where { pos.queryHasEgg() }.count() > 0
+        }
+
+        /** @return whether an egg was deleted at the position */
+        fun delete(pos: GlobalPos): Boolean = transaction {
+            Tables.Eggs.deleteWhere { pos.queryHasEgg() } > 0
+        }
+
+        /** @return the number of deleted eggs */
+        fun deleteAll(): Int = transaction { Tables.Eggs.deleteAll() }
+
+        fun totalCount(): Long = transaction { Tables.Eggs.selectAll().count() }
     }
 
-    fun isEggAtPos(pos: GlobalPos): Boolean = transaction {
-        Eggs.selectAll().where { eggAtPosition(pos) }.count() > 0
-    }
+    data class Player(val player: PlayerEntity) {
+        fun updateName(): Unit = transaction {
+            Tables.Players.upsert {
+                it[id] = player.uuid
+                it[name] = player.name.string
+            }
+        }
 
-    /** @return whether an egg was deleted at the position */
-    fun deleteEgg(pos: GlobalPos): Boolean = transaction {
-        Eggs.deleteWhere { eggAtPosition(pos) } > 0
-    }
+        fun foundEggCount(): Long = transaction {
+            Tables.FoundEggs.selectAll().where { Tables.FoundEggs.playerUUID eq player.uuid }.count()
+        }
 
-    fun deleteAllEggs(): Int = transaction { Eggs.deleteAll() }
+        /** @return whether the egg has not already been found by the player */
+        fun checkFoundEgg(pos: GlobalPos): Boolean = transaction {
+            Tables.FoundEggs.insertIgnore {
+                it[eggId] = Tables.Eggs.selectAll().where { pos.queryHasEgg() }.first()[Tables.Eggs.id]
+                it[playerUUID] = player.uuid
+            }.insertedCount > 0
+        }
 
-    fun getTotalEggCount(): Long = transaction { Eggs.selectAll().count() }
-
-    private fun eggAtPosition(globalPos: GlobalPos) = with(globalPos) {
-        (Eggs.world eq dimension.value.toString())
-            .and(Eggs.x eq pos.x)
-            .and(Eggs.y eq pos.y)
-            .and(Eggs.z eq pos.z)
+        fun resetFoundEggs(): Unit = transaction {
+            Tables.FoundEggs.deleteWhere { playerUUID eq player.uuid }
+        }
     }
 
     data class LeaderboardEntry(val rank: Long, val playerName: String, val eggsFound: Long)
 
     fun getLeaderboard(): List<LeaderboardEntry> = transaction {
-        val count = FoundEggs.egg.count()
+        val count = Tables.FoundEggs.eggId.count()
+        val name = Tables.Players.name
         val rank = Rank().over().orderBy(count, order = SortOrder.DESC)
 
-        (FoundEggs innerJoin Players)
-            .select(rank, Players.name, count)
-            .groupBy(Players.name)
+        (Tables.FoundEggs innerJoin Tables.Players)
+            .select(rank, name, count)
+            .groupBy(Tables.Players.name)
             .orderBy(count)
             .toList()
-            .map { row -> LeaderboardEntry(row[rank], row[Players.name], row[count]) }
-    }
-
-    fun updatePlayerName(player: PlayerEntity): Unit = transaction {
-        Players.upsert {
-            it[id] = player.uuid
-            it[name] = player.name.string
-        }
-    }
-
-    fun PlayerEntity.getEggCount(): Long = transaction {
-        FoundEggs.selectAll().where { FoundEggs.player eq uuid }.count()
-    }
-
-    /** @return whether the egg has not already been found by the player */
-    fun PlayerEntity.checkFoundEgg(pos: GlobalPos): Boolean = transaction {
-        FoundEggs.insertIgnore {
-            it[egg] = Eggs.selectAll().where { eggAtPosition(pos) }.first()[Eggs.id]
-            it[player] = uuid
-        }.insertedCount > 0
-    }
-
-    fun PlayerEntity.resetFoundEggs(): Unit = transaction {
-        FoundEggs.deleteWhere { player eq uuid }
+            .map { row -> LeaderboardEntry(row[rank], row[name], row[count]) }
     }
 }

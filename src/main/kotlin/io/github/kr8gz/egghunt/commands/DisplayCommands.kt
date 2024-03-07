@@ -1,8 +1,8 @@
 package io.github.kr8gz.egghunt.commands
 
 import io.github.kr8gz.egghunt.database.Database
-import io.github.kr8gz.egghunt.database.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
+import io.github.kr8gz.egghunt.database.inDatabase
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting.*
 import java.text.DecimalFormat
@@ -11,12 +11,12 @@ import java.util.Locale
 
 object DisplayCommands {
     fun getProgressMessage(context: ServerCommandContext): Text {
-        val totalEggs = Database.getTotalEggCount().also {
+        val totalEggs = Database.Eggs.totalCount().also {
             if (it == 0L) return EggHunt.MESSAGE_PREFIX.append("${RED}There are no eggs to be found... yet!")
         }
 
         @Suppress("UsePropertyAccessSyntax")
-        val playerFound = context.source.getPlayerOrThrow().getEggCount()
+        val playerFound = context.source.getPlayerOrThrow().inDatabase().foundEggCount()
         val foundAllEggs = playerFound == totalEggs
 
         val percentageText = (playerFound / totalEggs.toFloat() * 100).let { foundPercentage ->

@@ -1,10 +1,9 @@
 package io.github.kr8gz.egghunt.world
 
 import io.github.kr8gz.egghunt.database.Database
-import io.github.kr8gz.egghunt.database.Database.checkFoundEgg
-import io.github.kr8gz.egghunt.database.Database.getEggCount
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
+import io.github.kr8gz.egghunt.database.inDatabase
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.player.PlayerEntity
@@ -36,9 +35,9 @@ object EggFindDetector {
     }
 
     private fun eggFindListener(player: PlayerEntity, world: World, pos: BlockPos) {
-        if (player.isSpectator || !Database.isEggAtPos(pos within world)) return
+        if (player.isSpectator || !Database.Eggs.isAtPosition(pos within world)) return
 
-        if (!player.checkFoundEgg(pos within world)) {
+        if (!player.inDatabase().checkFoundEgg(pos within world)) {
             player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}You already found this egg!"))
             return
         }
@@ -50,7 +49,7 @@ object EggFindDetector {
             runCommands(world, player, commands)
         }
 
-        if (Database.getTotalEggCount() == player.getEggCount()) {
+        if (Database.Eggs.totalCount() == player.inDatabase().foundEggCount()) {
             runCommands(world, player, config.onFoundAll.commands)
         }
     }

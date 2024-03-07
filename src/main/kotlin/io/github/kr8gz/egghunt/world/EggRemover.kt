@@ -23,12 +23,12 @@ object EggRemover {
     @JvmStatic
     fun checkForEggRemoval(world: World, pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
         val blockChanged = oldBlock.block != newBlock.block
-        lastRemovedEggPos = (pos within world).takeIf { blockChanged && Database.deleteEgg(it) }
+        lastRemovedEggPos = (pos within world).takeIf { blockChanged && Database.Eggs.delete(it) }
     }
 
     fun registerBlockBreakListeners() {
         PlayerBlockBreakEvents.BEFORE.register { world, player, pos, _, _ ->
-            if (!Database.isEggAtPos(pos within world)) return@register true
+            if (!Database.Eggs.isAtPosition(pos within world)) return@register true
 
             Permissions.check(player, EggHunt.Permissions.REMOVE, config.defaultPermissionLevel).also { hasPermission ->
                 if (!hasPermission) player.sendMessage(
