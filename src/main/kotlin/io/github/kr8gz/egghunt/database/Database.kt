@@ -19,19 +19,20 @@ object Database {
 
     /** @return the ID of the new egg */
     fun createEgg(globalPos: GlobalPos, placedByPlayer: PlayerEntity): Int = transaction {
-        Egg.new {
-            world = globalPos.dimension.value.toString()
+        val inserted = Eggs.insert {
+            it[world] = globalPos.dimension.value.toString()
             with(globalPos) {
-                x = pos.x
-                y = pos.y
-                z = pos.z
+                it[x] = pos.x
+                it[y] = pos.y
+                it[z] = pos.z
             }
-            placedBy = Player.findById(placedByPlayer.uuid)!!
-        }.id.value
+            it[placedBy] = placedByPlayer.uuid
+        }
+        inserted[Eggs.id].value
     }
 
     fun isEggAtPos(pos: GlobalPos): Boolean = transaction {
-        Egg.find { eggAtPosition(pos) }.firstOrNull() != null
+        Eggs.selectAll().where { eggAtPosition(pos) }.count() > 0
     }
 
     /** @return whether an egg was deleted at the position */
@@ -78,7 +79,7 @@ object Database {
     /** @return whether the egg has not already been found by the player */
     fun PlayerEntity.checkFoundEgg(pos: GlobalPos): Boolean = transaction {
         FoundEggs.insertIgnore {
-            it[egg] = Egg.find { eggAtPosition(pos) }.first().id
+            it[egg] = Eggs.selectAll().where { eggAtPosition(pos) }.first()[Eggs.id]
             it[player] = uuid
         }.insertedCount > 0
     }
