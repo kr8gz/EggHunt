@@ -38,10 +38,8 @@ object EggRemover {
         }
 
         PlayerBlockBreakEvents.AFTER.register { world, player, pos, _, _ ->
-            lastRemovedEggPos?.let {
-                if (it == pos within world) {
-                    player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}Egg removed!"))
-                }
+            if (lastRemovedEggPos == pos within world) {
+                player.sendMessage(EggHunt.MESSAGE_PREFIX.append("${Formatting.RED}Egg removed!"))
             }
         }
     }
