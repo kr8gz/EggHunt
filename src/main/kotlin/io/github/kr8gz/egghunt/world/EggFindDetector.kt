@@ -13,6 +13,7 @@ import net.minecraft.item.FireworkRocketItem
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting
@@ -39,11 +40,11 @@ object EggFindDetector {
         if (player.isSpectator || !Database.Eggs.isAtPosition(pos within world)) return
 
         if (!player.inDatabase().checkFoundEgg(pos within world)) {
-            player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.RED + "You already found this egg!"))
+            player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.found.already").formatted(Formatting.RED))
             return
         }
 
-        player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.GREEN + "You found an egg!"))
+        player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.found").formatted(Formatting.GREEN))
 
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)

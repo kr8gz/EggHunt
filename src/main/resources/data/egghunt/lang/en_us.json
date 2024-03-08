@@ -1,0 +1,20 @@
+{
+  "command.egghunt.leaderboard.entry.multiple": "%s found %s eggs",
+  "command.egghunt.leaderboard.entry.single": "%s found %s egg",
+  "command.egghunt.leaderboard.label": "Leaderboard",
+  "command.egghunt.leaderboard.no_eggs": "No eggs have been found so far...",
+  "command.egghunt.progress.found.multiple": "You found all %s eggs!",
+  "command.egghunt.progress.found.single": "You found the only egg!",
+  "command.egghunt.progress.multiple": "You found %s out of %s eggs",
+  "command.egghunt.progress.no_eggs": "There are no eggs to be found... yet!",
+  "command.egghunt.progress.percentage": "%s%%",
+  "command.egghunt.progress.single": "You haven't found the egg!",
+  "command.egghunt.reset.eggs": "Removed %s eggs",
+  "command.egghunt.reset.player": "Reset found eggs for %s player(s)",
+  "egghunt.egg.found": "You found an egg!",
+  "egghunt.egg.found.already": "You already found this egg!",
+  "egghunt.egg.placed": "Egg #%s placed!",
+  "egghunt.egg.removed": "Egg removed!",
+  "egghunt.egg.removed.forbidden": "You don't have permission to remove eggs!",
+  "egghunt.item.name": "Easter Egg"
+}

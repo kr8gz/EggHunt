@@ -10,13 +10,13 @@ group = project.maven_group
 repositories {
     mavenCentral()
     maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
+        url "https://api.modrinth.com/maven"
         content {
             includeGroup "maven.modrinth"
         }
     }
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url 'https://maven.nucleoid.xyz' }
     // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -39,10 +39,13 @@ dependencies {
     include implementation('org.jetbrains.exposed:exposed-core:0.48.0')
     include implementation('org.jetbrains.exposed:exposed-jdbc:0.48.0')
 
-    // Permissions API
+    // Permissions
     include modImplementation('me.lucko:fabric-permissions-api:0.3-SNAPSHOT')
 
-    // Config and transitive dependencies
+    // Translations
+    include modImplementation('xyz.nucleoid:server-translations-api:2.2.0+1.20.3-rc1')
+
+    // Config
     include implementation('com.sksamuel.hoplite:hoplite-core:2.7.5')
     include implementation('com.sksamuel.hoplite:hoplite-watch:2.7.5')
     include implementation('com.sksamuel.hoplite:hoplite-toml:2.7.5')

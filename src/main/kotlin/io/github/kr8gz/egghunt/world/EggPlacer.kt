@@ -16,10 +16,10 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 object EggPlacer {
-    private const val EGG_ITEM_NAME = "Easter Egg"
+    private val EGG_ITEM_NAME = Text.translatable("egghunt.item.name")
 
     fun randomEggItem(): ItemStack = Items.PLAYER_HEAD.defaultStack.apply {
-        setCustomName(Text.literal(EGG_ITEM_NAME).styled { style -> style.withItalic(false) })
+        setCustomName(EGG_ITEM_NAME.styled { style -> style.withItalic(false) })
         setSubNbt(EggHunt.MOD_NAME, NbtByte.ONE) // marker tag
         setSubNbt(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
     }
@@ -32,12 +32,12 @@ object EggPlacer {
 
         nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
         Database.Eggs.create(context.blockPos within context.world, player).also { id ->
-            player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.GREEN + "Egg #$id placed!"))
+            player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.placed", id).formatted(Formatting.GREEN))
         }
     }
 
     private fun generateRandomSkullOwner() = NbtCompound().apply {
-        putString("Name", EGG_ITEM_NAME)
+        putString("Name", EGG_ITEM_NAME.string)
         put("Properties", NbtCompound().apply {
             put("textures", NbtList().apply {
                 add(NbtCompound().apply {

@@ -4,8 +4,6 @@ import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
-fun Number.pluralSuffix(suffix: String) = if (this != 1) suffix else ""
-
 // Create a `Text` from `Formatting` and a `String`
 operator fun Formatting.plus(text: String): MutableText = Text.literal(text).formatted(this)
 

@@ -7,6 +7,7 @@ import io.github.kr8gz.egghunt.plus
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.block.BlockState
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.GlobalPos
@@ -33,14 +34,14 @@ object EggRemover {
 
             Permissions.check(player, EggHunt.Permissions.REMOVE, config.defaultPermissionLevel).also { hasPermission ->
                 if (!hasPermission) player.sendMessage(
-                    EggHunt.MESSAGE_PREFIX.append(Formatting.RED + "You don't have permission to remove eggs!")
+                    EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.removed.forbidden").formatted(Formatting.RED)
                 )
             }
         }
 
         PlayerBlockBreakEvents.AFTER.register { world, player, pos, _, _ ->
             if (lastRemovedEggPos == pos within world) {
-                player.sendMessage(EggHunt.MESSAGE_PREFIX.append(Formatting.RED + "Egg removed!"))
+                player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.removed").formatted(Formatting.RED))
             }
         }
     }
