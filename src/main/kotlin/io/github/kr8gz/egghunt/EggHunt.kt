@@ -6,7 +6,7 @@ import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.database.inDatabase
 import io.github.kr8gz.egghunt.world.EggFindDetector
 import io.github.kr8gz.egghunt.world.EggRemover
-import net.fabricmc.api.ModInitializer
+import net.fabricmc.api.DedicatedServerModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.minecraft.text.MutableText
@@ -14,7 +14,7 @@ import net.minecraft.text.Text
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
-object EggHunt : ModInitializer {
+object EggHunt : DedicatedServerModInitializer {
     const val MOD_ID = "egghunt"
     val MOD_NAME = this::class.simpleName!!
 
@@ -31,19 +31,19 @@ object EggHunt : ModInitializer {
 
     val LOGGER: Logger = LogManager.getLogger()
 
-    override fun onInitialize() {
+    override fun onInitializeServer() {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             EggHuntCommand.register(dispatcher)
-        }
-
-        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
-            handler.player.inDatabase().updateName()
         }
 
         EggRemover.registerBlockBreakListeners()
         EggFindDetector.registerBlockClickListeners()
 
         Database.initialize()
+        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            handler.player.inDatabase().updateName()
+        }
+
         initializeConfig()
     }
 }

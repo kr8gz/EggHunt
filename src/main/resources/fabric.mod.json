@@ -2,19 +2,20 @@
   "schemaVersion": 1,
   "id": "egghunt",
   "version": "${version}",
-  "name": "EggHunt",
+  "name": "Egg Hunt",
   "description": "A simple server-side easter egg hunt mod for Fabric.",
   "authors": [
     "kr8gz"
   ],
   "contact": {
-    "repo": "https://github.com/kr8gz/EggHunt"
+    "issues": "https://github.com/kr8gz/EggHunt/issues",
+    "sources": "https://github.com/kr8gz/EggHunt"
   },
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "icon": "assets/egghunt/icon.png",
   "environment": "server",
   "entrypoints": {
-    "main": [
+    "server": [
       {
         "adapter": "kotlin",
         "value": "io.github.kr8gz.egghunt.EggHunt"
