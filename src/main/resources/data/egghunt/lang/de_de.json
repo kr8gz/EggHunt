@@ -1,0 +1,21 @@
+{
+  "command.egghunt.leaderboard.entry.multiple": "%s hat %s Eier gefunden",
+  "command.egghunt.leaderboard.entry.single": "%s hat %s Ei gefunden",
+  "command.egghunt.leaderboard.label": "Rangliste",
+  "command.egghunt.leaderboard.no_eggs": "Bisher wurden keine Eier gefunden...",
+  "command.egghunt.progress.found.multiple": "Du hast alle %s Eier gefunden! (%s)",
+  "command.egghunt.progress.found.single": "Du hast das einzige Ei gefunden! (%s)",
+  "command.egghunt.progress.multiple": "Du hast %s von %s Eiern gefunden (%s)",
+  "command.egghunt.progress.no_eggs": "Es sind noch keine Eier zu finden!",
+  "command.egghunt.progress.percentage": "%s%%",
+  "command.egghunt.progress.single": "Du hast das Ei noch nicht gefunden! (%s)",
+  "command.egghunt.reset.eggs": "%s Eier wurden entfernt",
+  "command.egghunt.reset.player.multiple": "Gefundene Eier von %s Spielern wurden zurückgesetzt",
+  "command.egghunt.reset.player.single": "Gefundene Eier von %s wurden zurückgesetzt",
+  "egghunt.egg.found": "Du hast ein Ei gefunden!",
+  "egghunt.egg.found.already": "Du hast dieses Ei bereits gefunden!",
+  "egghunt.egg.placed": "Ei #%s platziert!",
+  "egghunt.egg.removed": "Ei entfernt!",
+  "egghunt.egg.removed.forbidden": "Du hast keine Berechtigung, Eier zu entfernen!",
+  "egghunt.item.name": "Osterei"
+}
