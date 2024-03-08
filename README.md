@@ -19,14 +19,14 @@ from the `[eggPlacement]` section of the configuration.
 
 ### Finding eggs
 Eggs can be found by any player when they left-click or right-click on one.
-The `[onEggFound]` section of the configuration allows you to customize actions that are
+The `[onEggFound]` section of the configuration allows you to define custom actions that are
 run whenever a player finds a new egg, such as rewarding the player with a specific item.
 By default, a firework is spawned.
 
 ![Egg finding example](gallery/finding.png)
 
-Additionally, you can customize actions that are run when a player has found *all* eggs
-in the `[onFoundAll]` section of the configuration.
+Additionally, you can customize actions to run when a player has found *all* eggs in the
+`[onFoundAll]` section of the configuration.
 
 ### Removing eggs
 To remove eggs by breaking them, the [`egghunt.remove`](#permissions) permission is required.
@@ -39,20 +39,20 @@ of players who are finding eggs to adventure mode, or to install a separate worl
 ### Progress and leaderboard
 Every player can track their egg finding progress with the `/egghunt progress` command:
 
-![Egg finding progress example](gallery/progress.png)
+![Egg Hunt progress example](gallery/progress.png)
 
 The `/egghunt leaderboard` command will display the current rankings of players participating
 in the egg hunt:
 
-![Egg finding leaderboard example](gallery/leaderboard.png)
+![Egg Hunt leaderboard example](gallery/leaderboard.png)
 
 ### Resetting eggs
 There are two commands to reset egg data, both of which require the
 [`egghunt.reset`](#permissions) permission:
 
 * `/egghunt reset player <selector>` – Additionally requires the
-  [`egghunt.reset.player`](#permissions) permission. This command resets the selected players' 
-  progress, allowing them to collect all previously found eggs again.
+  [`egghunt.reset.player`](#permissions) permission. This command resets the progress of the
+  selected players, allowing them to collect all previously found eggs again.
 
 * `/egghunt reset eggs` – Additionally requires the [`egghunt.reset.eggs`](#permissions)
   permission. This command removes all egg locations from the database, though the physical
