@@ -38,16 +38,18 @@ object DisplayCommands {
         }
 
         return EggHunt.MESSAGE_PREFIX + when {
-            foundAllEggs && totalEggs == 1L -> Text.translatable("command.egghunt.progress.found.single")
-            foundAllEggs -> Text.translatable("command.egghunt.progress.found.multiple", Formatting.WHITE + "$totalEggs")
-            totalEggs == 1L -> Text.translatable("command.egghunt.progress.single")
-            else -> Text.translatable("command.egghunt.progress.multiple", Formatting.WHITE + "$playerFound", Formatting.WHITE + "$totalEggs")
-        }.formatted(Formatting.GRAY) + Formatting.GRAY + " (" + percentageText + Formatting.GRAY + ")"
+            foundAllEggs && totalEggs == 1L -> Text.translatable("command.egghunt.progress.found.single", percentageText)
+            foundAllEggs -> Text.translatable("command.egghunt.progress.found.multiple", Formatting.WHITE + "$totalEggs", percentageText)
+            totalEggs == 1L -> Text.translatable("command.egghunt.progress.single", percentageText)
+            else -> Text.translatable("command.egghunt.progress.multiple", Formatting.WHITE + "$playerFound", Formatting.WHITE + "$totalEggs", percentageText)
+        }.formatted(Formatting.GRAY)
     }
 
     fun getLeaderboardMessage(context: ServerCommandContext): Text {
         val leaderboard = Database.getLeaderboard().also {
-            if (it.isEmpty()) return EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.leaderboard.no_eggs").formatted(Formatting.RED)
+            if (it.isEmpty()) {
+                return EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.leaderboard.no_eggs").formatted(Formatting.RED)
+            }
         }
 
         val executorPlayerName = context.source.player?.name?.string
@@ -60,10 +62,13 @@ object DisplayCommands {
         return EggHunt.MESSAGE_PREFIX.apply {
             append(Text.translatable("command.egghunt.leaderboard.label").formatted(Formatting.YELLOW))
             topEntries.forEach { entry ->
-                val entryType = if (entry.eggsFound == 1L) "single" else "multiple"
+                val translationKey = "command.egghunt.leaderboard.entry.${if (entry.eggsFound == 1L) "single" else "multiple"}"
                 val playerNameColor = if (entry.playerName == executorPlayerName) Formatting.GREEN else Formatting.RED
-                append("\n")
-                append(Formatting.WHITE + "${entry.rank}. " + Text.translatable("command.egghunt.leaderboard.entry.$entryType", playerNameColor + entry.playerName, Formatting.WHITE + "%,d".format(entry.eggsFound)).formatted(Formatting.GRAY))
+
+                val leaderboardEntry = Text.translatable(translationKey, playerNameColor + entry.playerName, Formatting.WHITE + "%,d".format(entry.eggsFound))
+
+                append("\n${entry.rank}. ")
+                append(leaderboardEntry.formatted(Formatting.GRAY))
             }
         }
     }

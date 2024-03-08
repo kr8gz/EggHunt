@@ -84,7 +84,10 @@ object EggHuntCommand {
     private fun resetPlayerProgress(context: ServerCommandContext, players: Collection<PlayerEntity>): Int {
         return players.onEach { it.inDatabase().resetFoundEggs() }.size.also { count ->
             context.source.sendFeedback({
-                EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.reset.player", count)
+                EggHunt.MESSAGE_PREFIX + when (count) {
+                    1 -> Text.translatable("command.egghunt.reset.player.single", players.first().displayName)
+                    else -> Text.translatable("command.egghunt.reset.player.multiple", count)
+                }
             }, true)
         }
     }
