@@ -1,19 +1,19 @@
 package io.github.kr8gz.egghunt.database
 
 import io.github.kr8gz.egghunt.EggHunt
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.GlobalPos
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.nio.file.Path
 
 object Database {
-    private val DATABASE_PATH = FabricLoader.getInstance().gameDir.resolve("${EggHunt.MOD_NAME}.db")
+    private val DATABASE_FILE = "${EggHunt.MOD_NAME}.db"
 
-    fun initialize() {
-        Database.connect("jdbc:sqlite:$DATABASE_PATH?foreign_keys=on")
+    fun initialize(savePath: Path) {
+        Database.connect("jdbc:sqlite:${savePath.resolve(DATABASE_FILE).toFile()}?foreign_keys=on")
         Tables.create()
     }
 
