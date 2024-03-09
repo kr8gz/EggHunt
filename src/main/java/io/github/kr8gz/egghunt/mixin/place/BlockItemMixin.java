@@ -1,4 +1,4 @@
-package io.github.kr8gz.egghunt.mixin;
+package io.github.kr8gz.egghunt.mixin.place;
 
 import io.github.kr8gz.egghunt.world.EggPlacer;
 import net.minecraft.item.BlockItem;
@@ -11,10 +11,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockItem.class)
 public class BlockItemMixin {
+    /** Injects custom placement behavior for eggs */
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At("RETURN"))
     private void place(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir) {
         if (cir.getReturnValue().isAccepted()) {
-            EggPlacer.tryPlaceEggAndUpdateItem(context);
+            EggPlacer.tryRegisterEggAndUpdateItem(context);
         }
     }
 }

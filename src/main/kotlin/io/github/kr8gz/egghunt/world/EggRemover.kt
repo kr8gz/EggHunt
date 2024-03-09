@@ -14,23 +14,24 @@ import net.minecraft.util.math.GlobalPos
 import net.minecraft.world.World
 
 object EggRemover {
-    /**
-     * Since all eggs are removed in [checkForEggRemoval] before the listener in
-     * [registerBlockBreakListeners] is fired, we need a variable to track
-     * the last egg that was removed. Using this, we can always remove the egg
-     * first and send a message later when it was actually broken by a player.
-     **/
-    private var lastRemovedEggPos: GlobalPos? = null
+    private var playerEggBreakPos: GlobalPos? = null
 
     @JvmStatic
-    fun checkForEggRemoval(world: World, pos: BlockPos, oldBlock: BlockState, newBlock: BlockState) {
-        val blockChanged = oldBlock.block != newBlock.block
-        lastRemovedEggPos = (pos within world).takeIf { blockChanged && Database.Eggs.delete(it) }
+    fun isEggAt(world: World, pos: BlockPos) = Database.Eggs.isAtPosition(pos within world)
+
+    @JvmStatic
+    fun shouldPreserveBlock(world: World, pos: BlockPos, newState: BlockState): Boolean {
+        // TODO update client?
+        return playerEggBreakPos?.run { world.getBlockState(pos).isOf(newState.block) } ?: isEggAt(world, pos)
     }
 
     fun registerBlockBreakListeners() {
         PlayerBlockBreakEvents.BEFORE.register { world, player, pos, _, _ ->
-            if (!Database.Eggs.isAtPosition(pos within world)) return@register true
+            val globalPos = pos within world
+            Database.Eggs.isAtPosition(globalPos).let { isEgg ->
+                playerEggBreakPos = globalPos.takeIf { isEgg }
+                if (!isEgg) return@register true
+            }
 
             Permissions.check(player, EggHunt.Permissions.REMOVE, config.defaultPermissionLevel).also { hasPermission ->
                 if (!hasPermission) player.sendMessage(
@@ -40,7 +41,8 @@ object EggRemover {
         }
 
         PlayerBlockBreakEvents.AFTER.register { world, player, pos, _, _ ->
-            if (lastRemovedEggPos == pos within world) {
+            if (playerEggBreakPos?.takeIf { Database.Eggs.delete(it) } == pos within world) {
+                playerEggBreakPos = null
                 player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.removed").formatted(Formatting.RED))
             }
         }

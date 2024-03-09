@@ -25,7 +25,7 @@ object EggPlacer {
     }
 
     @JvmStatic
-    fun tryPlaceEggAndUpdateItem(context: ItemPlacementContext) {
+    fun tryRegisterEggAndUpdateItem(context: ItemPlacementContext) {
         val nbt = context.stack.nbt?.takeIf { it.getBoolean(EggHunt.MOD_NAME) } ?: return
         val player = context.player ?: return
         if (!Permissions.check(player, EggHunt.Permissions.PLACE, config.defaultPermissionLevel)) return

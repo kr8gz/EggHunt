@@ -18,9 +18,21 @@ object Database {
     }
 
     object Eggs {
+        private data class EggPosition(val x: Int, val y: Int, val z: Int, val world: String)
+
+        private fun GlobalPos.toEggPosition() = EggPosition(pos.x, pos.y, pos.z, dimension.value.toString())
+
+        private val cachedPositions = transaction {
+            Tables.Eggs.selectAll().map {
+                with(Tables.Eggs) {
+                    EggPosition(it[x], it[y], it[z], it[world])
+                }
+            }.toHashSet()
+        }
+
         /** @return the ID of the new egg */
         fun create(globalPos: GlobalPos, placedByPlayer: PlayerEntity): Int = transaction {
-            val inserted = Tables.Eggs.insert {
+            val insertedId = Tables.Eggs.insertAndGetId {
                 it[world] = globalPos.dimension.value.toString()
                 with(globalPos) {
                     it[x] = pos.x
@@ -29,22 +41,26 @@ object Database {
                 }
                 it[placedBy] = placedByPlayer.uuid
             }
-            inserted[Tables.Eggs.id].value
+            cachedPositions.add(globalPos.toEggPosition())
+            insertedId.value
         }
 
-        fun isAtPosition(pos: GlobalPos): Boolean = transaction {
-            Tables.Eggs.selectAll().where { pos.queryHasEgg() }.count() > 0
-        }
+        fun isAtPosition(globalPos: GlobalPos) = globalPos.toEggPosition() in cachedPositions
 
         /** @return whether an egg was deleted at the position */
-        fun delete(pos: GlobalPos): Boolean = transaction {
-            Tables.Eggs.deleteWhere { pos.queryHasEgg() } > 0
+        fun delete(globalPos: GlobalPos): Boolean = transaction {
+            Tables.Eggs.deleteWhere { globalPos.queryHasEgg() }.let { deletedCount ->
+                cachedPositions.remove(globalPos.toEggPosition())
+                deletedCount > 0
+            }
         }
 
         /** @return the number of deleted eggs */
-        fun deleteAll(): Int = transaction { Tables.Eggs.deleteAll() }
+        fun deleteAll(): Int = transaction {
+            Tables.Eggs.deleteAll().also { cachedPositions.clear() }
+        }
 
-        fun totalCount(): Long = transaction { Tables.Eggs.selectAll().count() }
+        fun totalCount() = cachedPositions.size
     }
 
     data class Player(val player: PlayerEntity) {
@@ -55,12 +71,12 @@ object Database {
             }
         }
 
-        fun foundEggCount(): Long = transaction {
-            Tables.FoundEggs.selectAll().where { Tables.FoundEggs.playerUUID eq player.uuid }.count()
+        fun foundEggCount(): Int = transaction {
+            Tables.FoundEggs.selectAll().where { Tables.FoundEggs.playerUUID eq player.uuid }.count().toInt()
         }
 
-        /** @return whether the egg has not already been found by the player */
-        fun checkFoundEgg(pos: GlobalPos): Boolean = transaction {
+        /** @return whether the player found a new egg */
+        fun tryFindEgg(pos: GlobalPos): Boolean = transaction {
             Tables.FoundEggs.insertIgnore {
                 it[eggId] = Tables.Eggs.selectAll().where { pos.queryHasEgg() }.first()[Tables.Eggs.id]
                 it[playerUUID] = player.uuid

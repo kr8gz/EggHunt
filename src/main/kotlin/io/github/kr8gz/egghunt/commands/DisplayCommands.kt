@@ -13,7 +13,7 @@ import java.util.Locale
 object DisplayCommands {
     fun getProgressMessage(context: ServerCommandContext): Text {
         val totalEggs = Database.Eggs.totalCount().also {
-            if (it == 0L) return EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.progress.no_eggs").formatted(Formatting.RED)
+            if (it == 0) return EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.progress.no_eggs").formatted(Formatting.RED)
         }
 
         @Suppress("UsePropertyAccessSyntax")
@@ -38,9 +38,9 @@ object DisplayCommands {
         }
 
         return EggHunt.MESSAGE_PREFIX + when {
-            foundAllEggs && totalEggs == 1L -> Text.translatable("command.egghunt.progress.found.single", percentageText)
+            foundAllEggs && totalEggs == 1 -> Text.translatable("command.egghunt.progress.found.single", percentageText)
             foundAllEggs -> Text.translatable("command.egghunt.progress.found.multiple", Formatting.WHITE + "$totalEggs", percentageText)
-            totalEggs == 1L -> Text.translatable("command.egghunt.progress.single", percentageText)
+            totalEggs == 1 -> Text.translatable("command.egghunt.progress.single", percentageText)
             else -> Text.translatable("command.egghunt.progress.multiple", Formatting.WHITE + "$playerFound", Formatting.WHITE + "$totalEggs", percentageText)
         }.formatted(Formatting.GRAY)
     }
