@@ -7,6 +7,9 @@ import io.github.kr8gz.egghunt.plus
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.block.BlockState
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
@@ -21,8 +24,19 @@ object EggRemover {
 
     @JvmStatic
     fun shouldPreserveBlock(world: World, pos: BlockPos, newState: BlockState): Boolean {
-        // TODO update client?
-        return playerEggBreakPos?.run { world.getBlockState(pos).isOf(newState.block) } ?: isEggAt(world, pos)
+        val blockChanged = !world.getBlockState(pos).isOf(newState.block)
+        return blockChanged && playerEggBreakPos != pos within world && isEggAt(world, pos)
+    }
+
+    @JvmStatic
+    fun updateClient(player: PlayerEntity, world: World, pos: BlockPos) {
+        if (player is ServerPlayerEntity) world.getBlockEntity(pos)?.let {
+            // TODO update on...
+            //  - sticky piston retract
+            //  - fluid bucket fill
+            //  - break without permission
+            player.networkHandler.sendPacket(BlockEntityUpdateS2CPacket.create(it))
+        }
     }
 
     fun registerBlockBreakListeners() {
@@ -42,9 +56,9 @@ object EggRemover {
 
         PlayerBlockBreakEvents.AFTER.register { world, player, pos, _, _ ->
             if (playerEggBreakPos?.takeIf { Database.Eggs.delete(it) } == pos within world) {
-                playerEggBreakPos = null
                 player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.removed").formatted(Formatting.RED))
             }
+            playerEggBreakPos = null
         }
     }
 }
