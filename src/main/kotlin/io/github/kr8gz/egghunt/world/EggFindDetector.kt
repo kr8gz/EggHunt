@@ -44,16 +44,19 @@ object EggFindDetector {
             return
         }
 
-        player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.found").formatted(Formatting.GREEN))
-
         with(config.onEggFound) {
             if (spawnFireworks) spawnFirework(world, pos)
             runCommands(world, player, commands)
         }
 
-        if (Database.Eggs.totalCount() == player.inDatabase().foundEggCount()) {
+        val translationKey = if (Database.Eggs.totalCount() == player.inDatabase().foundEggCount()) {
             runCommands(world, player, config.onFoundAll.commands)
+            "egghunt.egg.found.all"
+        } else {
+            "egghunt.egg.found"
         }
+
+        player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable(translationKey).formatted(Formatting.GREEN))
     }
 
     private fun spawnFirework(world: World, pos: BlockPos) {

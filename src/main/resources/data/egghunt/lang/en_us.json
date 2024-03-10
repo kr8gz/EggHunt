@@ -14,6 +14,7 @@
   "command.egghunt.reset.player.multiple": "Reset found eggs for %s players",
   "command.egghunt.reset.player.single": "Reset found eggs for %s",
   "egghunt.egg.found": "You found an egg!",
+  "egghunt.egg.found.all": "You found all eggs!",
   "egghunt.egg.found.already": "You already found this egg!",
   "egghunt.egg.placed": "Egg #%s placed!",
   "egghunt.egg.removed": "Egg removed!",

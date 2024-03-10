@@ -14,6 +14,7 @@
   "command.egghunt.reset.player.multiple": "Gefundene Eier von %s Spielern wurden zurückgesetzt",
   "command.egghunt.reset.player.single": "Gefundene Eier von %s wurden zurückgesetzt",
   "egghunt.egg.found": "Du hast ein Ei gefunden!",
+  "egghunt.egg.found.all": "Du hast alle Eier gefunden!",
   "egghunt.egg.found.already": "Du hast dieses Ei bereits gefunden!",
   "egghunt.egg.placed": "Ei #%s platziert!",
   "egghunt.egg.removed": "Ei entfernt!",
