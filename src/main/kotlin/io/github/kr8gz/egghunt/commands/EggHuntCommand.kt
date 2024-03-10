@@ -76,7 +76,10 @@ object EggHuntCommand {
     private fun removeAllEggs(context: ServerCommandContext): Int {
         return Database.Eggs.deleteAll().also { count ->
             context.source.sendFeedback({
-                EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.reset.eggs", count)
+                EggHunt.MESSAGE_PREFIX + when (count) {
+                    1 -> Text.translatable("command.egghunt.reset.eggs.single")
+                    else -> Text.translatable("command.egghunt.reset.eggs.multiple", count)
+                }
             }, true)
         }
     }

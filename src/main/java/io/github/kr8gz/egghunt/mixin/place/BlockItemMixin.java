@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockItem.class)
-public class BlockItemMixin {
+public abstract class BlockItemMixin {
     /** Injects custom placement behavior for eggs */
     @Inject(method = "place(Lnet/minecraft/item/ItemPlacementContext;)Lnet/minecraft/util/ActionResult;", at = @At("RETURN"))
     private void place(ItemPlacementContext context, CallbackInfoReturnable<ActionResult> cir) {

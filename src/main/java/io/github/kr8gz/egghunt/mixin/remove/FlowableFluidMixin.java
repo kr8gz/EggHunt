@@ -16,7 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(FlowableFluid.class)
 public abstract class FlowableFluidMixin {
     @Inject(method = "canFill", at = @At("HEAD"), cancellable = true)
-    private void canFill(BlockView world, BlockPos pos, BlockState blockState, Fluid fluid, CallbackInfoReturnable<Boolean> cir) {
-        if (EggRemover.isEggAt((World) world, pos)) cir.setReturnValue(false);
+    private void canFill(BlockView blockView, BlockPos pos, BlockState blockState, Fluid fluid, CallbackInfoReturnable<Boolean> cir) {
+        if (blockView instanceof World world && EggRemover.isEggAt(world, pos)) {
+            cir.setReturnValue(false);
+        }
     }
 }
