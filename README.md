@@ -30,9 +30,9 @@ Additionally, you can customize actions to run when a player has found *all* egg
 
 ### Removing eggs
 To remove eggs by breaking them, the [`egghunt.remove`](#permissions) permission is required.
-However, the mod **cannot** prevent eggs from being broken by other means, such as using water or
-TNT. (Note: this may be changed in the future.) For now, it is recommended to set the gamemode
-of players who are finding eggs to adventure mode, or to install a separate world protection mod.
+The mod will prevent eggs from being broken by any other means, such as using water or TNT.
+(Note that this might cause client desynchronization issues, which can however be fixed by
+relogging.)
 
 ![Egg removing example](gallery/removing.png)
 
