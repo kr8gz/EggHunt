@@ -2,6 +2,7 @@ package io.github.kr8gz.egghunt.commands
 
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.context.CommandContext
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
@@ -26,10 +27,18 @@ object EggHuntCommand {
                 context.source.sendMessage(DisplayCommands.getProgressMessage(context))
                 Command.SINGLE_SUCCESS
             })
-            .then(literal("leaderboard").executes { context ->
-                context.source.sendMessage(DisplayCommands.getLeaderboardMessage(context))
-                Command.SINGLE_SUCCESS
-            })
+            .then(literal("leaderboard")
+                .executes { context ->
+                    context.source.sendMessage(DisplayCommands.getLeaderboardMessage(context))
+                    Command.SINGLE_SUCCESS
+                }
+                .then(argument("limit", IntegerArgumentType.integer(1))
+                    .executes { context ->
+                        val limit = IntegerArgumentType.getInteger(context, "limit")
+                        context.source.sendMessage(DisplayCommands.getLeaderboardMessage(context, limit))
+                        Command.SINGLE_SUCCESS
+                    })
+            )
             .then(literal("place")
                 .requires(Permissions.require(EggHunt.Permissions.PLACE, config.defaultPermissionLevel))
                 .executes { context ->

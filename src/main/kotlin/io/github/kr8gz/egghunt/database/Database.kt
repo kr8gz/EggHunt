@@ -94,9 +94,7 @@ object Database {
             val count = "count"
             connection.prepareStatement("SELECT COUNT(*) $count FROM $FoundEggs WHERE $playerUUID = ?").run {
                 setString(1, player.uuidAsString)
-                executeQuery().use { rs ->
-                    rs.getInt(count)
-                }
+                executeQuery().use { rs -> rs.getInt(count) }
             }
         }
 
@@ -136,7 +134,7 @@ object Database {
 
     data class LeaderboardEntry(val rank: Int, val playerName: String, val eggsFound: Int)
 
-    fun getLeaderboard(playerName: String?, limit: Int = 9): List<LeaderboardEntry> {
+    fun getLeaderboard(playerName: String?, limit: Int): List<LeaderboardEntry> {
         val leaderboard = "leaderboard"
         val count = "count"
         val rank = "rank"

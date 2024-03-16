@@ -45,9 +45,9 @@ object DisplayCommands {
         }.formatted(Formatting.GRAY)
     }
 
-    fun getLeaderboardMessage(context: ServerCommandContext): Text {
+    fun getLeaderboardMessage(context: ServerCommandContext, limit: Int = 9): Text {
         val executorPlayerName = context.source.player?.name?.string
-        val leaderboard = Database.getLeaderboard(executorPlayerName)
+        val leaderboard = Database.getLeaderboard(executorPlayerName, limit)
 
         return EggHunt.MESSAGE_PREFIX + if (leaderboard.isEmpty()) {
             Text.translatable("command.egghunt.leaderboard.no_eggs").formatted(Formatting.RED)
