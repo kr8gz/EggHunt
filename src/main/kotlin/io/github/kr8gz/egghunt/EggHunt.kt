@@ -3,7 +3,6 @@ package io.github.kr8gz.egghunt
 import io.github.kr8gz.egghunt.commands.EggHuntCommand
 import io.github.kr8gz.egghunt.config.initializeConfig
 import io.github.kr8gz.egghunt.database.Database
-import io.github.kr8gz.egghunt.database.inDatabase
 import io.github.kr8gz.egghunt.world.EggFindDetector
 import io.github.kr8gz.egghunt.world.EggRemover
 import net.fabricmc.api.DedicatedServerModInitializer

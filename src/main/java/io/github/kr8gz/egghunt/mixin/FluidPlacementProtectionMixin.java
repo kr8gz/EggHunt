@@ -1,6 +1,7 @@
-package io.github.kr8gz.egghunt.mixin.remove;
+package io.github.kr8gz.egghunt.mixin;
 
-import io.github.kr8gz.egghunt.world.EggRemover;
+import io.github.kr8gz.egghunt.database.Database;
+import io.github.kr8gz.egghunt.world.EggPosition;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BucketItem;
 import net.minecraft.util.hit.BlockHitResult;
@@ -11,11 +12,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Prevents placing fluids from breaking eggs */
 @Mixin(BucketItem.class)
-public abstract class BucketItemMixin {
+public abstract class FluidPlacementProtectionMixin {
     @Inject(method = "placeFluid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;breakBlock(Lnet/minecraft/util/math/BlockPos;Z)Z", shift = At.Shift.BEFORE), cancellable = true)
     private void placeFluid(PlayerEntity player, World world, BlockPos pos, BlockHitResult hitResult, CallbackInfoReturnable<Boolean> cir) {
-        if (EggRemover.isEggAt(world, pos)) cir.setReturnValue(false);
+        if (Database.Eggs.isAtPosition(new EggPosition(world, pos))) {
+            cir.setReturnValue(false);
+        }
     }
 }

@@ -3,10 +3,10 @@ package io.github.kr8gz.egghunt.commands
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.context.CommandContext
-import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
-import io.github.kr8gz.egghunt.database.inDatabase
+import io.github.kr8gz.egghunt.database.Database
+import io.github.kr8gz.egghunt.inDatabase
 import io.github.kr8gz.egghunt.plus
 import io.github.kr8gz.egghunt.world.EggPlacer
 import me.lucko.fabric.api.permissions.v0.Permissions

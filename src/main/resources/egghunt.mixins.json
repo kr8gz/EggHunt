@@ -4,12 +4,12 @@
   "package": "io.github.kr8gz.egghunt.mixin",
   "compatibilityLevel": "JAVA_17",
   "server": [
-    "place.BlockItemMixin",
-    "remove.BucketItemMixin",
-    "remove.ExplosionMixin",
-    "remove.FlowableFluidMixin",
-    "remove.PistonHandlerMixin",
-    "remove.WorldMixin"
+    "EggPlacementBehaviorMixin",
+    "ExplosionProtectionMixin",
+    "FluidFlowProtectionMixin",
+    "FluidPlacementProtectionMixin",
+    "PistonMovementProtectionMixin",
+    "SetBlockStateProtectionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,10 +1,11 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
-import io.github.kr8gz.egghunt.database.inDatabase
+import io.github.kr8gz.egghunt.database.Database
+import io.github.kr8gz.egghunt.inDatabase
 import io.github.kr8gz.egghunt.plus
+import io.github.kr8gz.egghunt.within
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.player.PlayerEntity

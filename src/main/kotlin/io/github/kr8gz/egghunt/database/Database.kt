@@ -1,112 +1,158 @@
 package io.github.kr8gz.egghunt.database
 
 import io.github.kr8gz.egghunt.EggHunt
+import io.github.kr8gz.egghunt.database.Table.*
+import io.github.kr8gz.egghunt.world.EggPosition
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.GlobalPos
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.file.Path
+import java.sql.Connection
+import java.sql.DriverManager
 
 object Database {
-    private val DATABASE_FILE = "${EggHunt.MOD_NAME}.db"
+    private lateinit var DATABASE_URL: String
+
+    private val connection by object {
+        var connection: Connection? = null
+
+        operator fun getValue(thisRef: Any?, property: Any?): Connection {
+            return connection?.takeUnless { it.isClosed }
+                ?: DriverManager.getConnection(DATABASE_URL).also { connection = it }
+        }
+    }
 
     fun initialize(savePath: Path) {
-        Database.connect("jdbc:sqlite:${savePath.resolve(DATABASE_FILE).toFile()}?foreign_keys=on")
-        Tables.create()
+        DATABASE_URL = "jdbc:sqlite:${savePath.resolve("${EggHunt.MOD_NAME}.db").toFile()}?foreign_keys=on"
+        connection.createStatement().use(Table::createAll)
     }
 
     object Eggs {
-        private data class EggPosition(val x: Int, val y: Int, val z: Int, val world: String)
-
-        private fun GlobalPos.toEggPosition() = EggPosition(pos.x, pos.y, pos.z, dimension.value.toString())
-
-        private val cachedPositions = transaction {
-            Tables.Eggs.selectAll().map {
-                with(Tables.Eggs) {
-                    EggPosition(it[x], it[y], it[z], it[world])
-                }
-            }.toHashSet()
+        private val cachedPositions = with(Table.Eggs) {
+            connection.prepareStatement("SELECT $world, $x, $y, $z FROM $this").executeQuery().use { rs ->
+                generateSequence {
+                    rs.takeIf { it.next() }?.run { EggPosition(getString(world), getInt(x), getInt(y), getInt(z)) }
+                }.toHashSet()
+            }
         }
 
         /** @return the ID of the new egg */
-        fun create(globalPos: GlobalPos, placedByPlayer: PlayerEntity): Int = transaction {
-            val insertedId = Tables.Eggs.insertAndGetId {
-                it[world] = globalPos.dimension.value.toString()
-                with(globalPos) {
-                    it[x] = pos.x
-                    it[y] = pos.y
-                    it[z] = pos.z
+        fun create(pos: EggPosition): Int = with(Table.Eggs) {
+            connection.prepareStatement("INSERT INTO $this ($world, $x, $y, $z) VALUES (?, ?, ?, ?)").run {
+                with(pos) {
+                    setString(1, world)
+                    setInt(2, x)
+                    setInt(3, y)
+                    setInt(4, z)
+                    executeUpdate()
+                    cachedPositions.add(this)
                 }
-                it[placedBy] = placedByPlayer.uuid
+                generatedKeys.run { next(); getInt(1) }
             }
-            cachedPositions.add(globalPos.toEggPosition())
-            insertedId.value
         }
 
-        fun isAtPosition(globalPos: GlobalPos) = globalPos.toEggPosition() in cachedPositions
+        @JvmStatic
+        fun isAtPosition(pos: EggPosition) = pos in cachedPositions
 
         /** @return whether an egg was deleted at the position */
-        fun delete(globalPos: GlobalPos): Boolean = transaction {
-            Tables.Eggs.deleteWhere { globalPos.queryHasEgg() }.let { deletedCount ->
-                cachedPositions.remove(globalPos.toEggPosition())
-                deletedCount > 0
+        fun delete(pos: EggPosition): Boolean = with(Table.Eggs) {
+            connection.prepareStatement("DELETE FROM $this WHERE $world = ? AND $x = ? AND $y = ? AND $z = ?").run {
+                with(pos) {
+                    setString(1, world)
+                    setInt(2, x)
+                    setInt(3, y)
+                    setInt(4, z)
+                }
+
+                (executeUpdate() > 0).also { eggDeleted ->
+                    if (eggDeleted) cachedPositions.remove(pos)
+                }
             }
         }
 
         /** @return the number of deleted eggs */
-        fun deleteAll(): Int = transaction {
-            Tables.Eggs.deleteAll().also { cachedPositions.clear() }
-        }
+        fun deleteAll(): Int = connection.prepareStatement("DELETE FROM ${Table.Eggs}")
+            .executeUpdate()
+            .also { cachedPositions.clear() }
 
         fun totalCount() = cachedPositions.size
     }
 
     data class Player(val player: PlayerEntity) {
-        fun updateName(): Unit = transaction {
-            Tables.Players.upsert {
-                it[id] = player.uuid
-                it[name] = player.name.string
+        fun updateName(): Unit = with(Players) {
+            connection.prepareStatement("INSERT INTO $this ($uuid, $name) VALUES (?, ?) ON CONFLICT($uuid) DO UPDATE SET $name = ?").run {
+                setString(1, player.uuidAsString)
+                val playerName = player.name.string
+                setString(2, playerName)
+                setString(3, playerName)
+                executeUpdate()
             }
         }
 
-        fun foundEggCount(): Int = transaction {
-            Tables.FoundEggs.selectAll().where { Tables.FoundEggs.playerUUID eq player.uuid }.count().toInt()
+        fun foundEggCount(): Int = with(FoundEggs) {
+            val count = "count"
+            connection.prepareStatement("SELECT COUNT(*) $count FROM $this WHERE $playerUUID = ?").run {
+                setString(1, player.uuidAsString)
+                executeQuery().use { rs ->
+                    rs.getInt(count)
+                }
+            }
         }
 
         /** @return whether the player found a new egg */
-        fun tryFindEgg(pos: GlobalPos): Boolean = transaction {
-            Tables.FoundEggs.insertIgnore {
-                it[eggId] = Tables.Eggs.selectAll().where { pos.queryHasEgg() }.first()[Tables.Eggs.id]
-                it[playerUUID] = player.uuid
-            }.insertedCount > 0
+        fun tryFindEgg(pos: EggPosition): Boolean {
+            val foundEggId = with(Table.Eggs) {
+                connection.prepareStatement("SELECT $id FROM $this WHERE $world = ? AND $x = ? AND $y = ? AND $z = ?").run {
+                    with(pos) {
+                        setString(1, world)
+                        setInt(2, x)
+                        setInt(3, y)
+                        setInt(4, z)
+                    }
+
+                    executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(id) else return false
+                    }
+                }
+            }
+
+            return with(FoundEggs) {
+                connection.prepareStatement("INSERT OR IGNORE INTO $this ($eggId, $playerUUID) VALUES (?, ?)").run {
+                    setInt(1, foundEggId)
+                    setString(2, player.uuidAsString)
+                    executeUpdate() > 0
+                }
+            }
         }
 
-        fun resetFoundEggs(): Unit = transaction {
-            Tables.FoundEggs.deleteWhere { playerUUID eq player.uuid }
+        fun resetFoundEggs(): Unit = with(FoundEggs) {
+            connection.prepareStatement("DELETE FROM $this WHERE $playerUUID = ?").run {
+                setString(1, player.uuidAsString)
+                executeUpdate()
+            }
         }
     }
 
-    data class LeaderboardEntry(val rank: Long, val playerName: String, val eggsFound: Long)
+    data class LeaderboardEntry(val rank: Int, val playerName: String, val eggsFound: Int)
 
-    fun getLeaderboard(): List<LeaderboardEntry> = transaction {
-        val count = Tables.FoundEggs.eggId.count()
-        val name = Tables.Players.name
-        val rank = Rank().over().orderBy(count, order = SortOrder.DESC)
+    fun getLeaderboard(): List<LeaderboardEntry> {
+        val count = "count"
+        val rank = "rank"
 
-        (Tables.FoundEggs innerJoin Tables.Players)
-            .select(rank, name, count)
-            .groupBy(Tables.Players.name)
-            .orderBy(count)
-            .toList()
-            .map { row -> LeaderboardEntry(row[rank], row[name], row[count]) }
-    }
+        val query = """
+            SELECT
+                ${Players.name},
+                COUNT(*) $count,
+                RANK() OVER (ORDER BY COUNT(*) DESC) $rank
+            FROM $FoundEggs
+            JOIN $Players
+                ON $Players.${Players.uuid} = $FoundEggs.${FoundEggs.playerUUID}
+            GROUP BY ${Players.name}
+            ORDER BY $count DESC
+        """
 
-    private fun GlobalPos.queryHasEgg() = with(Tables.Eggs) {
-        (world eq dimension.value.toString())
-            .and(x eq pos.x)
-            .and(y eq pos.y)
-            .and(z eq pos.z)
+        return connection.prepareStatement(query).executeQuery().use { rs ->
+            generateSequence {
+                rs.takeIf { it.next() }?.run { LeaderboardEntry(getInt(rank), getString(Players.name), getInt(count)) }
+            }.toList()
+        }
     }
 }

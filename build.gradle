@@ -36,8 +36,6 @@ dependencies {
 
     // Database
     modImplementation 'maven.modrinth:sqlite-jdbc:3.41.2.1+20230506'
-    include implementation('org.jetbrains.exposed:exposed-core:0.48.0')
-    include implementation('org.jetbrains.exposed:exposed-jdbc:0.48.0')
 
     // Permissions
     include modImplementation('me.lucko:fabric-permissions-api:0.3-SNAPSHOT')
@@ -46,9 +44,9 @@ dependencies {
     include modImplementation('xyz.nucleoid:server-translations-api:2.2.0+1.20.3-rc1')
 
     // Config
-    include implementation('com.sksamuel.hoplite:hoplite-core:2.7.5')
-    include implementation('com.sksamuel.hoplite:hoplite-watch:2.7.5')
-    include implementation('com.sksamuel.hoplite:hoplite-toml:2.7.5')
+    include implementation("com.sksamuel.hoplite:hoplite-core:${project.hoplite_version}")
+    include implementation("com.sksamuel.hoplite:hoplite-watch:${project.hoplite_version}")
+    include implementation("com.sksamuel.hoplite:hoplite-toml:${project.hoplite_version}")
     include implementation('org.tomlj:tomlj:1.1.0')
     include implementation('org.antlr:antlr4-runtime:4.11.1')
     include implementation('org.checkerframework:checker-qual:3.21.2')

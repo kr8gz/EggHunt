@@ -1,8 +1,8 @@
 package io.github.kr8gz.egghunt.commands
 
-import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
-import io.github.kr8gz.egghunt.database.inDatabase
+import io.github.kr8gz.egghunt.database.Database
+import io.github.kr8gz.egghunt.inDatabase
 import io.github.kr8gz.egghunt.plus
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -62,7 +62,7 @@ object DisplayCommands {
         return EggHunt.MESSAGE_PREFIX.apply {
             append(Text.translatable("command.egghunt.leaderboard.label").formatted(Formatting.YELLOW))
             topEntries.forEach { entry ->
-                val translationKey = "command.egghunt.leaderboard.entry.${if (entry.eggsFound == 1L) "single" else "multiple"}"
+                val translationKey = "command.egghunt.leaderboard.entry.${if (entry.eggsFound == 1) "single" else "multiple"}"
                 val playerNameColor = if (entry.playerName == executorPlayerName) Formatting.GREEN else Formatting.RED
 
                 val leaderboardEntry = Text.translatable(translationKey, playerNameColor + entry.playerName, Formatting.WHITE + "%,d".format(entry.eggsFound))

@@ -1,6 +1,7 @@
-package io.github.kr8gz.egghunt.mixin.remove;
+package io.github.kr8gz.egghunt.mixin;
 
-import io.github.kr8gz.egghunt.world.EggRemover;
+import io.github.kr8gz.egghunt.database.Database;
+import io.github.kr8gz.egghunt.world.EggPosition;
 import net.minecraft.block.BlockState;
 import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.Fluid;
@@ -12,12 +13,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Prevents fluid flow from breaking eggs */
 @Mixin(FlowableFluid.class)
-public abstract class FlowableFluidMixin {
+public abstract class FluidFlowProtectionMixin {
     @Inject(method = "canFill", at = @At("HEAD"), cancellable = true)
     private void canFill(BlockView blockView, BlockPos pos, BlockState blockState, Fluid fluid, CallbackInfoReturnable<Boolean> cir) {
-        if (blockView instanceof World world && EggRemover.isEggAt(world, pos)) {
+        if (blockView instanceof World world && Database.Eggs.isAtPosition(new EggPosition(world, pos))) {
             cir.setReturnValue(false);
         }
     }

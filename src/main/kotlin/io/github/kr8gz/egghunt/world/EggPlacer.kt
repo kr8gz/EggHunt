@@ -1,9 +1,10 @@
 package io.github.kr8gz.egghunt.world
 
-import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.config.config
+import io.github.kr8gz.egghunt.database.Database
 import io.github.kr8gz.egghunt.plus
+import io.github.kr8gz.egghunt.within
 import me.lucko.fabric.api.permissions.v0.Permissions
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
@@ -31,7 +32,7 @@ object EggPlacer {
         if (!Permissions.check(player, EggHunt.Permissions.PLACE, config.defaultPermissionLevel)) return
 
         nbt.put(PlayerHeadItem.SKULL_OWNER_KEY, generateRandomSkullOwner())
-        Database.Eggs.create(context.blockPos within context.world, player).also { id ->
+        Database.Eggs.create(context.blockPos within context.world).also { id ->
             player.sendMessage(EggHunt.MESSAGE_PREFIX + Text.translatable("egghunt.egg.placed", id).formatted(Formatting.GREEN))
         }
     }
