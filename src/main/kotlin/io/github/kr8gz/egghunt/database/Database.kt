@@ -81,9 +81,11 @@ object Database {
         fun updateName(): Unit = with(Players) {
             connection.prepareStatement("INSERT INTO $Players ($uuid, $name) VALUES (?, ?) ON CONFLICT($uuid) DO UPDATE SET $name = ?").run {
                 setString(1, player.uuidAsString)
+
                 val playerName = player.name.string
                 setString(2, playerName)
                 setString(3, playerName)
+
                 executeUpdate()
             }
         }
@@ -134,26 +136,39 @@ object Database {
 
     data class LeaderboardEntry(val rank: Int, val playerName: String, val eggsFound: Int)
 
-    fun getLeaderboard(): List<LeaderboardEntry> {
+    fun getLeaderboard(playerName: String?, limit: Int = 9): List<LeaderboardEntry> {
+        val leaderboard = "leaderboard"
         val count = "count"
         val rank = "rank"
 
         val query = """
-            SELECT
-                ${Players.name},
-                COUNT(*) $count,
-                RANK() OVER (ORDER BY COUNT(*) DESC) $rank
-            FROM $FoundEggs
-            JOIN $Players
-                ON $Players.${Players.uuid} = $FoundEggs.${FoundEggs.playerUUID}
-            GROUP BY ${Players.name}
-            ORDER BY $count DESC
+            WITH $leaderboard AS (
+                SELECT
+                    RANK() OVER (ORDER BY COUNT(*) DESC) $rank,
+                    ${Players.name},
+                    COUNT(*) $count
+                FROM $FoundEggs
+                JOIN $Players
+                    ON $Players.${Players.uuid} = $FoundEggs.${FoundEggs.playerUUID}
+                GROUP BY ${Players.name}
+                ORDER BY $rank
+            )
+            SELECT * FROM $leaderboard
+            WHERE $rank <= $limit OR ${Players.name} = ?
+            ORDER BY
+                CASE WHEN ${Players.name} = ? AND $rank > $limit THEN $limit - 0.5 ELSE $rank END
+            LIMIT $limit
         """
 
-        return connection.prepareStatement(query).executeQuery().use { rs ->
-            generateSequence {
-                rs.takeIf { it.next() }?.run { LeaderboardEntry(getInt(rank), getString(Players.name), getInt(count)) }
-            }.toList()
+        return connection.prepareStatement(query).run {
+            setString(1, playerName)
+            setString(2, playerName)
+
+            executeQuery().use { rs ->
+                generateSequence {
+                    rs.takeIf { it.next() }?.run { LeaderboardEntry(getInt(rank), getString(Players.name), getInt(count)) }
+                }.toList()
+            }
         }
     }
 }

@@ -46,29 +46,22 @@ object DisplayCommands {
     }
 
     fun getLeaderboardMessage(context: ServerCommandContext): Text {
-        val leaderboard = Database.getLeaderboard().also {
-            if (it.isEmpty()) {
-                return EggHunt.MESSAGE_PREFIX + Text.translatable("command.egghunt.leaderboard.no_eggs").formatted(Formatting.RED)
-            }
-        }
-
         val executorPlayerName = context.source.player?.name?.string
+        val leaderboard = Database.getLeaderboard(executorPlayerName)
 
-        val topEntries = leaderboard.take(9).toMutableList()
-        leaderboard.find { it.playerName == executorPlayerName }?.let {
-            if (it !in topEntries) topEntries[topEntries.lastIndex] = it
-        }
+        return EggHunt.MESSAGE_PREFIX + if (leaderboard.isEmpty()) {
+            Text.translatable("command.egghunt.leaderboard.no_eggs").formatted(Formatting.RED)
+        } else {
+            Text.translatable("command.egghunt.leaderboard.label").formatted(Formatting.YELLOW).apply {
+                leaderboard.forEach { entry ->
+                    val translationKey = "command.egghunt.leaderboard.entry.${if (entry.eggsFound == 1) "single" else "multiple"}"
+                    val playerNameColor = if (entry.playerName == executorPlayerName) Formatting.GREEN else Formatting.RED
 
-        return EggHunt.MESSAGE_PREFIX.apply {
-            append(Text.translatable("command.egghunt.leaderboard.label").formatted(Formatting.YELLOW))
-            topEntries.forEach { entry ->
-                val translationKey = "command.egghunt.leaderboard.entry.${if (entry.eggsFound == 1) "single" else "multiple"}"
-                val playerNameColor = if (entry.playerName == executorPlayerName) Formatting.GREEN else Formatting.RED
+                    val leaderboardEntry = Text.translatable(translationKey, playerNameColor + entry.playerName, Formatting.WHITE + "%,d".format(entry.eggsFound))
 
-                val leaderboardEntry = Text.translatable(translationKey, playerNameColor + entry.playerName, Formatting.WHITE + "%,d".format(entry.eggsFound))
-
-                append("\n${entry.rank}. ")
-                append(leaderboardEntry.formatted(Formatting.GRAY))
+                    append("\n${entry.rank}. ")
+                    append(leaderboardEntry.formatted(Formatting.GRAY))
+                }
             }
         }
     }
