@@ -2,6 +2,7 @@ package io.github.kr8gz.egghunt.database
 
 import io.github.kr8gz.egghunt.EggHunt
 import io.github.kr8gz.egghunt.database.Table.*
+import io.github.kr8gz.egghunt.database.Table.Eggs as EggPositions
 import io.github.kr8gz.egghunt.world.EggPosition
 import net.minecraft.entity.player.PlayerEntity
 import java.nio.file.Path
@@ -26,8 +27,8 @@ object Database {
     }
 
     object Eggs {
-        private val cachedPositions = with(Table.Eggs) {
-            connection.prepareStatement("SELECT $world, $x, $y, $z FROM $this").executeQuery().use { rs ->
+        private val cachedPositions = with(EggPositions) {
+            connection.prepareStatement("SELECT $world, $x, $y, $z FROM $EggPositions").executeQuery().use { rs ->
                 generateSequence {
                     rs.takeIf { it.next() }?.run { EggPosition(getString(world), getInt(x), getInt(y), getInt(z)) }
                 }.toHashSet()
@@ -35,8 +36,8 @@ object Database {
         }
 
         /** @return the ID of the new egg */
-        fun create(pos: EggPosition): Int = with(Table.Eggs) {
-            connection.prepareStatement("INSERT INTO $this ($world, $x, $y, $z) VALUES (?, ?, ?, ?)").run {
+        fun create(pos: EggPosition): Int = with(EggPositions) {
+            connection.prepareStatement("INSERT INTO $EggPositions ($world, $x, $y, $z) VALUES (?, ?, ?, ?)").run {
                 with(pos) {
                     setString(1, world)
                     setInt(2, x)
@@ -53,8 +54,8 @@ object Database {
         fun isAtPosition(pos: EggPosition) = pos in cachedPositions
 
         /** @return whether an egg was deleted at the position */
-        fun delete(pos: EggPosition): Boolean = with(Table.Eggs) {
-            connection.prepareStatement("DELETE FROM $this WHERE $world = ? AND $x = ? AND $y = ? AND $z = ?").run {
+        fun delete(pos: EggPosition): Boolean = with(EggPositions) {
+            connection.prepareStatement("DELETE FROM $EggPositions WHERE $world = ? AND $x = ? AND $y = ? AND $z = ?").run {
                 with(pos) {
                     setString(1, world)
                     setInt(2, x)
@@ -69,7 +70,7 @@ object Database {
         }
 
         /** @return the number of deleted eggs */
-        fun deleteAll(): Int = connection.prepareStatement("DELETE FROM ${Table.Eggs}")
+        fun deleteAll(): Int = connection.prepareStatement("DELETE FROM $EggPositions")
             .executeUpdate()
             .also { cachedPositions.clear() }
 
@@ -78,7 +79,7 @@ object Database {
 
     data class Player(val player: PlayerEntity) {
         fun updateName(): Unit = with(Players) {
-            connection.prepareStatement("INSERT INTO $this ($uuid, $name) VALUES (?, ?) ON CONFLICT($uuid) DO UPDATE SET $name = ?").run {
+            connection.prepareStatement("INSERT INTO $Players ($uuid, $name) VALUES (?, ?) ON CONFLICT($uuid) DO UPDATE SET $name = ?").run {
                 setString(1, player.uuidAsString)
                 val playerName = player.name.string
                 setString(2, playerName)
@@ -89,7 +90,7 @@ object Database {
 
         fun foundEggCount(): Int = with(FoundEggs) {
             val count = "count"
-            connection.prepareStatement("SELECT COUNT(*) $count FROM $this WHERE $playerUUID = ?").run {
+            connection.prepareStatement("SELECT COUNT(*) $count FROM $FoundEggs WHERE $playerUUID = ?").run {
                 setString(1, player.uuidAsString)
                 executeQuery().use { rs ->
                     rs.getInt(count)
@@ -99,8 +100,8 @@ object Database {
 
         /** @return whether the player found a new egg */
         fun tryFindEgg(pos: EggPosition): Boolean {
-            val foundEggId = with(Table.Eggs) {
-                connection.prepareStatement("SELECT $id FROM $this WHERE $world = ? AND $x = ? AND $y = ? AND $z = ?").run {
+            val foundEggId = with(EggPositions) {
+                connection.prepareStatement("SELECT $id FROM $EggPositions WHERE $world = ? AND $x = ? AND $y = ? AND $z = ?").run {
                     with(pos) {
                         setString(1, world)
                         setInt(2, x)
@@ -115,7 +116,7 @@ object Database {
             }
 
             return with(FoundEggs) {
-                connection.prepareStatement("INSERT OR IGNORE INTO $this ($eggId, $playerUUID) VALUES (?, ?)").run {
+                connection.prepareStatement("INSERT OR IGNORE INTO $FoundEggs ($eggId, $playerUUID) VALUES (?, ?)").run {
                     setInt(1, foundEggId)
                     setString(2, player.uuidAsString)
                     executeUpdate() > 0
@@ -124,7 +125,7 @@ object Database {
         }
 
         fun resetFoundEggs(): Unit = with(FoundEggs) {
-            connection.prepareStatement("DELETE FROM $this WHERE $playerUUID = ?").run {
+            connection.prepareStatement("DELETE FROM $FoundEggs WHERE $playerUUID = ?").run {
                 setString(1, player.uuidAsString)
                 executeUpdate()
             }
