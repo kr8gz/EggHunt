@@ -59,7 +59,7 @@ object DisplayCommands {
 
                     val leaderboardEntry = Text.translatable(translationKey, playerNameColor + entry.playerName, Formatting.WHITE + "%,d".format(entry.eggsFound))
 
-                    append("\n${entry.rank}. ")
+                    append(Formatting.WHITE + "\n${entry.rank}. ")
                     append(leaderboardEntry.formatted(Formatting.GRAY))
                 }
             }
