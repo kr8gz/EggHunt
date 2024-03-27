@@ -16,8 +16,11 @@ spawnFireworks = true
 # @s refers to the player who found the egg.
 # Commands must be written without a preceding `/`.
 commands = [
-    # Example command. You can uncomment or delete this.
+    # Example commands. You may uncomment or delete these.
     # "give @s diamond",
+
+    # You can also use TOML's literal strings to avoid escaping string delimiters, for example:
+    # '''give @s diamond{display:{Name:'{"text":"Custom Name","italic":false}'}}''',
 ]
 
 [onFoundAll]
